@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { DollarSign, File, FileChartPie, FileEdit, Folder, LayoutDashboard, Users, Users2 } from 'lucide-react';
+import { DollarSign, File, FileChartPie, FileEdit, Folder, History, LayoutDashboard, MessageCircle, Users, Users2 } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -74,9 +74,43 @@ const mainNavItems: NavItem[] = [
     {
         title: 'History',
         href: route('donor.history'),
-        icon: File,
+        icon: History,
         role: ['donor'],
     },
+
+    // sponsor dashboard
+    {
+        title: 'Children',
+        href: route('donor.donate'),
+        icon: Users,
+        role: ['sponsor'],
+    },
+    {
+        title: 'Updates',
+        href: route('donor.history'),
+        icon: File,
+        role: ['sponsor'],
+    },
+    {
+        title: 'Contributions',
+        href: route('donor.history'),
+        icon: DollarSign,
+        role: ['sponsor'],
+    },
+    {
+        title: 'Communication',
+        href: route('donor.history'),
+        icon: MessageCircle,
+        role: ['sponsor'],
+    },
+
+    /*
+    <TabsList>
+        <TabsTrigger value="children">My Sponsored Children</TabsTrigger>
+        <TabsTrigger value="updates">Recent Updates</TabsTrigger>
+        <TabsTrigger value="contributions">My Contributions</TabsTrigger>
+        <TabsTrigger value="communication">Communication</TabsTrigger>
+    </TabsList>,*/
 ];
 
 const footerNavItems: NavItem[] = [

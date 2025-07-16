@@ -52,7 +52,7 @@ export default function Dashboard() {
                                     <Progress value={child.progress} className="h-2" />
                                 </div>
                                 <Button className="w-full" variant="outline" asChild>
-                                    <Link href={`children/${child.id}`}>View Full Profile</Link>
+                                    <Link href={`/children/${child.id}`}>View Full Profile</Link>
                                 </Button>
                             </div>
                         </CardContent>

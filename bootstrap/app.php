@@ -20,6 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'anonymous-donation',
             'anonymous-donation/callback',
             'anonymous-donation/verify',
+            'donor/donations',
+            'donor/donations/callback',
+            'donor/donations/verify',
         ]);
 
         $middleware->web(append: [

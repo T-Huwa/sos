@@ -5,18 +5,72 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Donation;
 use App\Models\DonatedItem;
+use App\Models\Child;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
-class AnonymousDonationController extends Controller
+class DonorDonationController extends Controller
 {
+    public function index(Request $request)
+    {
+        $user = Auth::user();
+
+        $query = Donation::where('user_id', $user->id)
+            ->with(['child', 'donatedItems'])
+            ->orderBy('created_at', 'desc');
+
+        // Apply filters
+        if ($request->has('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->has('type') && $request->type !== 'all') {
+            $query->where('donation_type', $request->type);
+        }
+
+        if ($request->has('search') && $request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('description', 'like', '%' . $request->search . '%')
+                  ->orWhereHas('child', function ($childQuery) use ($request) {
+                      $childQuery->where('name', 'like', '%' . $request->search . '%');
+                  });
+            });
+        }
+
+        $donations = $query->paginate(10);
+
+        // Calculate statistics
+        $stats = [
+            'total_donated' => Donation::where('user_id', $user->id)
+                ->where('status', 'received')
+                ->where('donation_type', 'money')
+                ->sum('amount'),
+            'total_donations' => Donation::where('user_id', $user->id)->count(),
+            'children_helped' => Donation::where('user_id', $user->id)
+                ->whereNotNull('child_id')
+                ->distinct('child_id')
+                ->count(),
+            'this_month' => Donation::where('user_id', $user->id)
+                ->where('status', 'received')
+                ->where('donation_type', 'money')
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->sum('amount'),
+        ];
+
+        return response()->json([
+            'donations' => $donations,
+            'stats' => $stats,
+        ]);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
             'donation_type' => 'required|in:cash,items',
-            'anonymous_name' => 'required|string|max:255',
-            'anonymous_email' => 'required|email|max:255',
+            'child_id' => 'nullable|exists:children,id',
             'message' => 'nullable|string|max:1000',
 
             // Cash donation fields
@@ -39,23 +93,23 @@ class AnonymousDonationController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Anonymous donation failed: ' . $e->getMessage());
+            Log::error('Donor donation failed: ' . $e->getMessage());
             return response()->json(['message' => 'Donation failed. Please try again.'], 500);
         }
     }
 
     private function handleCashDonation(array $validated)
     {
+        $user = Auth::user();
+
         // Create donation record
         $donation = Donation::create([
-            'user_id' => null,
+            'user_id' => $user->id,
+            'child_id' => $validated['child_id'] ?? null,
             'donation_type' => 'money',
             'amount' => $validated['amount'],
             'description' => $validated['message'],
             'status' => 'pending',
-            'is_anonymous' => true,
-            'anonymous_name' => $validated['anonymous_name'],
-            'anonymous_email' => $validated['anonymous_email'],
             'checkout_ref' => Str::uuid(),
         ]);
 
@@ -73,16 +127,16 @@ class AnonymousDonationController extends Controller
 
     private function handleItemDonation(array $validated)
     {
+        $user = Auth::user();
+
         // Create donation record
         $donation = Donation::create([
-            'user_id' => null,
+            'user_id' => $user->id,
+            'child_id' => $validated['child_id'] ?? null,
             'donation_type' => 'goods',
             'amount' => null,
             'description' => $validated['message'],
             'status' => 'received', // Item donations are immediately received
-            'is_anonymous' => true,
-            'anonymous_name' => $validated['anonymous_name'],
-            'anonymous_email' => $validated['anonymous_email'],
         ]);
 
         // Create donated items
@@ -111,13 +165,11 @@ class AnonymousDonationController extends Controller
         // Use the actual domain from APP_URL or a publicly accessible URL
         $baseUrl = config('app.url');
         if (str_contains($baseUrl, 'localhost') || str_contains($baseUrl, '127.0.0.1')) {
-            // For development, you might want to use ngrok or similar
-            // For now, we'll handle this gracefully by using a placeholder
-            $baseUrl = 'https://e87b387bf8a0.ngrok-free.app'; // Replace with actual domain in production
+            $baseUrl = 'https://cb230e0ea1ec.ngrok-free.app';
         }
 
-        $callbackUrl = $baseUrl . "/anonymous-donation/callback";
-        $returnUrl = $baseUrl . "/anonymous-donation/return";
+        $callbackUrl = $baseUrl . "/donor/donations/callback";
+        $returnUrl = $baseUrl . "/donor/donations/return";
 
         // Build the form data for PayChangu
         $formData = [
@@ -127,13 +179,14 @@ class AnonymousDonationController extends Controller
             'tx_ref' => $donation->checkout_ref,
             'amount' => $donation->amount,
             'currency' => 'MWK',
-            'email' => $donation->anonymous_email,
-            'first_name' => explode(' ', $donation->anonymous_name)[0],
-            'last_name' => implode(' ', array_slice(explode(' ', $donation->anonymous_name), 1)) ?: '',
-            'title' => 'Anonymous Donation',
-            'description' => 'Anonymous donation to SOS',
+            'email' => $donation->user->email,
+            'first_name' => explode(' ', $donation->user->name)[0],
+            'last_name' => implode(' ', array_slice(explode(' ', $donation->user->name), 1)) ?: '',
+            'title' => 'Donation to SOS',
+            'description' => $donation->child ? "Donation for {$donation->child->name}" : 'General donation to SOS',
             'meta[donation_id]' => $donation->id,
-            'meta[type]' => 'anonymous_donation',
+            'meta[type]' => 'donor_donation',
+            'meta[user_id]' => $donation->user_id,
         ];
 
         // Create HTML form that auto-submits to PayChangu
@@ -146,7 +199,7 @@ class AnonymousDonationController extends Controller
         $formHtml .= '</form><script>document.getElementById("paychangu-form").submit();</script></body></html>';
 
         // Save the form to a temporary file and return the URL
-        $tempFile = 'paychangu_' . $donation->checkout_ref . '.html';
+        $tempFile = 'paychangu_donor_' . $donation->checkout_ref . '.html';
         $tempPath = storage_path('app/public/' . $tempFile);
         file_put_contents($tempPath, $formHtml);
 
@@ -155,7 +208,7 @@ class AnonymousDonationController extends Controller
 
     public function callback(Request $request)
     {
-        Log::info('PayChangu Anonymous Donation Callback:', $request->all());
+        Log::info('PayChangu Donor Donation Callback:', $request->all());
 
         $validated = $request->validate([
             'tx_ref' => 'required|string',
@@ -165,7 +218,7 @@ class AnonymousDonationController extends Controller
         $donation = Donation::where('checkout_ref', $validated['tx_ref'])->first();
 
         if (!$donation) {
-            Log::error('Anonymous donation not found for tx_ref: ' . $validated['tx_ref']);
+            Log::error('Donor donation not found for tx_ref: ' . $validated['tx_ref']);
             return response()->json(['message' => 'Donation not found'], 404);
         }
 
@@ -173,16 +226,16 @@ class AnonymousDonationController extends Controller
             $donation->update(['status' => 'received']);
 
             // Clean up temporary file
-            $tempFile = 'paychangu_' . $donation->checkout_ref . '.html';
+            $tempFile = 'paychangu_donor_' . $donation->checkout_ref . '.html';
             $tempPath = storage_path('app/public/' . $tempFile);
             if (file_exists($tempPath)) {
                 unlink($tempPath);
             }
 
-            return redirect()->route('anonymous.donation.success', ['ref' => $donation->checkout_ref]);
+            return redirect()->route('donor.donation.success', ['ref' => $donation->checkout_ref]);
         } else {
             $donation->update(['status' => 'failed']);
-            return redirect()->route('anonymous.donation.failed', ['ref' => $donation->checkout_ref]);
+            return redirect()->route('donor.donation.failed', ['ref' => $donation->checkout_ref]);
         }
     }
 
@@ -198,7 +251,7 @@ class AnonymousDonationController extends Controller
             }
         }
 
-        return redirect()->route('anonymous.donation.failed', ['ref' => $txRef]);
+        return redirect()->route('donor.donation.failed', ['ref' => $txRef]);
     }
 
     public function verifyTransaction(Request $request)
@@ -207,7 +260,9 @@ class AnonymousDonationController extends Controller
             'tx_ref' => 'required|string',
         ]);
 
-        $donation = Donation::where('checkout_ref', $validated['tx_ref'])->first();
+        $donation = Donation::where('checkout_ref', $validated['tx_ref'])
+            ->where('user_id', Auth::id())
+            ->first();
 
         if (!$donation) {
             return response()->json(['message' => 'Donation not found'], 404);
@@ -219,7 +274,7 @@ class AnonymousDonationController extends Controller
             $donation->update(['status' => 'received']);
 
             // Clean up temporary file
-            $tempFile = 'paychangu_' . $donation->checkout_ref . '.html';
+            $tempFile = 'paychangu_donor_' . $donation->checkout_ref . '.html';
             $tempPath = storage_path('app/public/' . $tempFile);
             if (file_exists($tempPath)) {
                 unlink($tempPath);
@@ -228,7 +283,7 @@ class AnonymousDonationController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Transaction verified and marked as successful',
-                'redirect_url' => route('anonymous.donation.success', ['ref' => $donation->checkout_ref])
+                'redirect_url' => route('donor.donation.success', ['ref' => $donation->checkout_ref])
             ]);
         }
 

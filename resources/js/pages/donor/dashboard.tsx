@@ -1,37 +1,111 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { Gift, Heart, TrendingUp, Users } from 'lucide-react';
+import { Gift, Loader2, Package, TrendingUp, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+interface DonatedItem {
+    id: number;
+    item_name: string;
+    quantity: number;
+}
+
+interface Child {
+    id: number;
+    name: string;
+    age: number;
+}
+
+interface Donation {
+    id: number;
+    amount?: number;
+    donation_type: 'money' | 'goods';
+    status: 'pending' | 'received' | 'failed';
+    description?: string;
+    created_at: string;
+    child?: Child;
+    donated_items?: DonatedItem[];
+}
+
+interface Stats {
+    total_donated: number;
+    total_donations: number;
+    children_helped: number;
+    this_month: number;
+}
+
+interface DashboardData {
+    stats: Stats;
+    recent_donations: Donation[];
+}
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
-        href: '/dashboard',
+        href: '/donor/dashboard',
     },
 ];
 
-export default function Dashboard() {
-    const recentDonations = [
-        { id: 1, child: 'Chisomo Phiri', amount: 'MWK 15,000', date: '2024-01-15', type: 'Money', status: 'Delivered' },
-        {
-            id: 2,
-            child: 'Mphatso Banda',
-            amount: 'School Supplies',
-            date: '2024-01-10',
-            type: 'Items',
-            status: 'In Transit',
-        },
-        { id: 3, child: 'Thandiwe Mwale', amount: 'MWK 8,000', date: '2024-01-05', type: 'Money', status: 'Delivered' },
-    ];
+export default function DonorDashboard() {
+    const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    const sponsoredChildren = [
-        { id: 1, name: 'Chisomo Phiri', age: 12, school: 'Lilongwe Primary', progress: 85 },
-        { id: 2, name: 'Mphatso Banda', age: 10, school: 'Blantyre Community School', progress: 92 },
-    ];
+    useEffect(() => {
+        fetchDashboardData();
+    }, []);
+
+    const fetchDashboardData = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch('/donor/donations/api?limit=5', {
+                headers: {
+                    Accept: 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setDashboardData({
+                    stats: data.stats,
+                    recent_donations: data.donations.data.slice(0, 5), // Get first 5 for recent donations
+                });
+            }
+        } catch (error) {
+            console.error('Failed to fetch dashboard data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const formatAmount = (amount: number | undefined, type: string) => {
+        if (type === 'goods') return 'Items';
+        return amount ? `MWK ${amount.toLocaleString()}` : 'N/A';
+    };
+
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('en-GB', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+        });
+    };
+
+    const getStatusBadgeVariant = (status: string) => {
+        switch (status) {
+            case 'received':
+                return 'default';
+            case 'pending':
+                return 'secondary';
+            case 'failed':
+                return 'destructive';
+            default:
+                return 'secondary';
+        }
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
@@ -42,55 +116,73 @@ export default function Dashboard() {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600">Total Donated</p>
-                                    <p className="text-2xl font-bold text-green-600">MWK 45,000</p>
+                {loading ? (
+                    <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
+                        {[...Array(4)].map((_, index) => (
+                            <Card key={index}>
+                                <CardContent className="p-6">
+                                    <div className="flex items-center justify-center">
+                                        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                ) : dashboardData ? (
+                    <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
+                        <Card>
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-600">Total Donated</p>
+                                        <p className="text-2xl font-bold text-green-600">MWK {dashboardData.stats.total_donated.toLocaleString()}</p>
+                                    </div>
+                                    <Gift className="h-8 w-8 text-green-600" />
                                 </div>
-                                <Gift className="h-8 w-8 text-green-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
 
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600">Children Helped</p>
-                                    <p className="text-2xl font-bold text-blue-600">8</p>
+                        <Card>
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-600">Total Donations</p>
+                                        <p className="text-2xl font-bold text-blue-600">{dashboardData.stats.total_donations}</p>
+                                    </div>
+                                    <Package className="h-8 w-8 text-blue-600" />
                                 </div>
-                                <Users className="h-8 w-8 text-blue-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
 
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600">This Month</p>
-                                    <p className="text-2xl font-bold text-purple-600">MWK 12,000</p>
+                        <Card>
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-600">Children Helped</p>
+                                        <p className="text-2xl font-bold text-purple-600">{dashboardData.stats.children_helped}</p>
+                                    </div>
+                                    <Users className="h-8 w-8 text-purple-600" />
                                 </div>
-                                <TrendingUp className="h-8 w-8 text-purple-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
 
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600">Thank You Letters</p>
-                                    <p className="text-2xl font-bold text-orange-600">5</p>
+                        <Card>
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-600">This Month</p>
+                                        <p className="text-2xl font-bold text-orange-600">MWK {dashboardData.stats.this_month.toLocaleString()}</p>
+                                    </div>
+                                    <TrendingUp className="h-8 w-8 text-orange-600" />
                                 </div>
-                                <Heart className="h-8 w-8 text-orange-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                ) : (
+                    <div className="mb-8 text-center">
+                        <p className="text-gray-500">Failed to load dashboard data</p>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <Card>
@@ -99,45 +191,96 @@ export default function Dashboard() {
                             <CardDescription>Your latest contributions</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="space-y-4">
-                                {recentDonations.map((donation) => (
-                                    <div key={donation.id} className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
-                                        <div>
-                                            <p className="font-medium">{donation.child}</p>
-                                            <p className="text-sm text-gray-600">
-                                                {donation.amount} • {donation.date}
-                                            </p>
+                            {loading ? (
+                                <div className="flex items-center justify-center py-8">
+                                    <Loader2 className="h-6 w-6 animate-spin" />
+                                    <span className="ml-2">Loading donations...</span>
+                                </div>
+                            ) : dashboardData && dashboardData.recent_donations.length > 0 ? (
+                                <div className="space-y-4">
+                                    {dashboardData.recent_donations.map((donation) => (
+                                        <div key={donation.id} className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+                                            <div className="flex items-center space-x-3">
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
+                                                    {donation.donation_type === 'money' ? (
+                                                        <Gift className="h-4 w-4 text-blue-600" />
+                                                    ) : (
+                                                        <Package className="h-4 w-4 text-blue-600" />
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium">{donation.child ? donation.child.name : 'General Donation'}</p>
+                                                    <p className="text-sm text-gray-600">
+                                                        {formatAmount(donation.amount, donation.donation_type)} • {formatDate(donation.created_at)}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <Badge variant={getStatusBadgeVariant(donation.status)}>
+                                                {donation.status.charAt(0).toUpperCase() + donation.status.slice(1)}
+                                            </Badge>
                                         </div>
-                                        <Badge variant={donation.status === 'Delivered' ? 'default' : 'secondary'}>{donation.status}</Badge>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="py-8 text-center">
+                                    <Gift className="mx-auto h-12 w-12 text-gray-400" />
+                                    <h3 className="mt-2 text-sm font-medium text-gray-900">No donations yet</h3>
+                                    <p className="mt-1 text-sm text-gray-500">Start making a difference by donating to children in need.</p>
+                                </div>
+                            )}
+                            <div className="mt-4 flex gap-2">
+                                <Button className="flex-1" asChild>
+                                    <Link href="/donor/donate">Make Donation</Link>
+                                </Button>
+                                <Button variant="outline" className="flex-1" asChild>
+                                    <Link href="/donor/donations">View All</Link>
+                                </Button>
                             </div>
-                            <Button className="mt-4 w-full" asChild>
-                                <Link href="/children">Donate to More Children</Link>
-                            </Button>
                         </CardContent>
                     </Card>
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Children You're Supporting</CardTitle>
-                            <CardDescription>Track their progress</CardDescription>
+                            <CardTitle>Children You've Helped</CardTitle>
+                            <CardDescription>Children who have received your donations</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="space-y-4">
-                                {sponsoredChildren.map((child) => (
-                                    <div key={child.id} className="rounded-lg bg-gray-50 p-3">
-                                        <div className="mb-2 flex items-center justify-between">
-                                            <p className="font-medium">{child.name}</p>
-                                            <Badge>{child.progress}% Progress</Badge>
-                                        </div>
-                                        <p className="mb-2 text-sm text-gray-600">
-                                            Age {child.age} • {child.school}
-                                        </p>
-                                        <Progress value={child.progress} className="h-2" />
-                                    </div>
-                                ))}
-                            </div>
+                            {loading ? (
+                                <div className="flex items-center justify-center py-8">
+                                    <Loader2 className="h-6 w-6 animate-spin" />
+                                    <span className="ml-2">Loading children...</span>
+                                </div>
+                            ) : dashboardData && dashboardData.recent_donations.some((d) => d.child) ? (
+                                <div className="space-y-4">
+                                    {dashboardData.recent_donations
+                                        .filter((d) => d.child)
+                                        .reduce((unique: Donation[], donation) => {
+                                            if (!unique.find((d) => d.child?.id === donation.child?.id)) {
+                                                unique.push(donation);
+                                            }
+                                            return unique;
+                                        }, [])
+                                        .slice(0, 3)
+                                        .map((donation) => (
+                                            <div key={donation.child!.id} className="rounded-lg bg-gray-50 p-3">
+                                                <div className="mb-2 flex items-center justify-between">
+                                                    <p className="font-medium">{donation.child!.name}</p>
+                                                    <Badge variant="outline">Age {donation.child!.age}</Badge>
+                                                </div>
+                                                <p className="text-sm text-gray-600">Last donation: {formatDate(donation.created_at)}</p>
+                                            </div>
+                                        ))}
+                                </div>
+                            ) : (
+                                <div className="py-8 text-center">
+                                    <Users className="mx-auto h-12 w-12 text-gray-400" />
+                                    <h3 className="mt-2 text-sm font-medium text-gray-900">No specific children yet</h3>
+                                    <p className="mt-1 text-sm text-gray-500">Donate to specific children to see them here.</p>
+                                </div>
+                            )}
+                            <Button className="mt-4 w-full" variant="outline" asChild>
+                                <Link href="/donor/children">Browse Children</Link>
+                            </Button>
                         </CardContent>
                     </Card>
                 </div>

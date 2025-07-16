@@ -12,6 +12,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class DonationController extends Controller
 {
+
     public function store(Request $request)
     {
         $data = $request->validate([

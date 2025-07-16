@@ -86,7 +86,6 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/dashboard', fn () => Inertia::render('admin/dashboard'))->name('admin.dashboard');
-    // More admin-only routes here
 });
 
 Route::middleware(['auth'])->prefix('sponsor')->group(function () {
@@ -99,6 +98,39 @@ Route::middleware(['auth'])->prefix('donor')->group(function () {
     Route::get('/children', fn () => Inertia::render('donor/children'))->name('donor.children');
     Route::get('/donate', fn () => Inertia::render('donor/donate'))->name('donor.donate');
     Route::get('/history', fn () => Inertia::render('donor/history'))->name('donor.history');
+
+    Route::get('/children/{id}', [ChildController::class, 'showToDonor'])->name('donor.child');
+
+    // Donor donation API routes
+    Route::get('/donations/api', [App\Http\Controllers\DonorDonationController::class, 'index'])->name('donor.donations.api');
+    Route::post('/donations', [App\Http\Controllers\DonorDonationController::class, 'store'])->name('donor.donations.store');
+    Route::post('/donations/callback', [App\Http\Controllers\DonorDonationController::class, 'callback'])->name('donor.donations.callback');
+    Route::get('/donations/return', [App\Http\Controllers\DonorDonationController::class, 'returnUrl'])->name('donor.donations.return');
+    Route::post('/donations/verify', [App\Http\Controllers\DonorDonationController::class, 'verifyTransaction'])->name('donor.donations.verify');
+
+    // Donor donation success/failure pages
+    Route::get('/donations/success/{ref}', function ($ref) {
+        $donation = \App\Models\Donation::where('checkout_ref', $ref)
+            ->where('user_id', auth()->id())
+            ->with(['child', 'donatedItems'])
+            ->firstOrFail();
+        return Inertia::render('donor/DonationSuccess', ['donation' => $donation]);
+    })->name('donor.donation.success');
+
+    Route::get('/donations/failed/{ref?}', function ($ref = null) {
+        $donation = null;
+        if ($ref) {
+            $donation = \App\Models\Donation::where('checkout_ref', $ref)
+                ->where('user_id', auth()->id())
+                ->with(['child', 'donatedItems'])
+                ->first();
+        }
+        return Inertia::render('donor/DonationFailed', ['donation' => $donation]);
+    })->name('donor.donation.failed');
+
+    Route::get('/donations/verify', function () {
+        return Inertia::render('donor/DonationVerify');
+    })->name('donor.donation.verify.page');
 });
 
 // Inventory manager routes
@@ -116,7 +148,7 @@ Route::middleware(['auth'])->prefix('inventory')->group(function () {
 
     
     Route::get('/communications', fn () => Inertia::render('inventory/communications'))->name('inventory.communications');
-    Route::get('/donations', fn () => Inertia::render('inventory/donations'))->name('inventory.donations');
+    Route::get('/donations', [ChildController::class, 'getDonations'])->name('inventory.donations');
     Route::get('/inventory', fn () => Inertia::render('inventory/inventory'))->name('inventory.inventory');
     Route::get('/reports', fn () => Inertia::render('inventory/reports'))->name('inventory.reports');
 });
