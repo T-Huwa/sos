@@ -25,6 +25,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'donor/donations/verify',
         ]);
 
+        // Trust ngrok and PayChangu hosts
+        $middleware->trustHosts(at: [
+            'e16fe5cdd8ad.ngrok-free.app',
+            '*.paychangu.com',
+            'localhost',
+        ]);
+
         $middleware->web(append: [
             HandleAppearance::class,
             HandleInertiaRequests::class,
