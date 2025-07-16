@@ -115,7 +115,7 @@ export default function ChildViewPage() {
                         {donations && donations.length ? (
                             donations.map((d: any) => (
                                 <li key={d.id}>
-                                    ${d.amount} from {d.donor.name} on {d.date}
+                                    ${d.amount} from {d.donor?.name || 'Anonymous'} on {d.date}
                                 </li>
                             ))
                         ) : (
@@ -131,7 +131,7 @@ export default function ChildViewPage() {
                         {donors && donors.length ? (
                             donors.map((donor: any) => (
                                 <li key={donor.id}>
-                                    {donor.name} – {donor.email}
+                                    {donor?.name || 'Anonymous'} – {donor.email}
                                 </li>
                             ))
                         ) : (

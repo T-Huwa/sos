@@ -9,6 +9,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Calendar, Gift, Mail, Package, Search, User } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 interface DonatedItem {
     id: number;
@@ -214,6 +215,8 @@ export default function InventoryDonationsPage({ donations }: Props) {
 }
 
 function DonationsTable({ donations }: { donations: Donation[] }) {
+    const [loadingInventory, setLoadingInventory] = useState<number | null>(null);
+
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-GB', {
             year: 'numeric',
@@ -234,6 +237,34 @@ function DonationsTable({ donations }: { donations: Donation[] }) {
                 return 'destructive';
             default:
                 return 'secondary';
+        }
+    };
+
+    const handleAddToInventory = async (donationId: number) => {
+        setLoadingInventory(donationId);
+        try {
+            const response = await fetch(`/inventory/donations/${donationId}/add-to-inventory`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                },
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                toast.success(data.message);
+                // Optionally refresh the page or update the UI
+                window.location.reload();
+            } else {
+                toast.error(data.message);
+            }
+        } catch (error) {
+            console.error('Failed to add to inventory:', error);
+            toast.error('Failed to add items to inventory. Please try again.');
+        } finally {
+            setLoadingInventory(null);
         }
     };
 
@@ -350,8 +381,13 @@ function DonationsTable({ donations }: { donations: Donation[] }) {
                                             View Details
                                         </Button>
                                         {donation.donation_type === 'goods' && donation.status === 'received' && (
-                                            <Button variant="outline" size="sm">
-                                                Add to Inventory
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => handleAddToInventory(donation.id)}
+                                                disabled={loadingInventory === donation.id}
+                                            >
+                                                {loadingInventory === donation.id ? 'Adding...' : 'Add to Inventory'}
                                             </Button>
                                         )}
                                     </div>
