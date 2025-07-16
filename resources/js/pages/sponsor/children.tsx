@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { Calendar, GraduationCap, Heart, MapPin, Search, Star, User } from 'lucide-react';
 import { useState } from 'react';
 
@@ -77,7 +77,8 @@ export default function SponsorChildren({ children, mySponsorship, filters }: Pr
         if (gender !== 'all') params.append('gender', gender);
         if (location !== 'all') params.append('location', location);
 
-        router.get('/sponsor/children', Object.fromEntries(params));
+        const queryString = params.toString();
+        window.location.href = `/sponsor/children${queryString ? '?' + queryString : ''}`;
     };
 
     const clearFilters = () => {
@@ -86,7 +87,7 @@ export default function SponsorChildren({ children, mySponsorship, filters }: Pr
         setAgeMax('');
         setGender('all');
         setLocation('all');
-        router.get('/sponsor/children');
+        window.location.href = '/sponsor/children';
     };
 
     const isSponsoring = (childId: number) => {
@@ -161,7 +162,7 @@ export default function SponsorChildren({ children, mySponsorship, filters }: Pr
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                         className="pl-10"
-                                        onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                                     />
                                 </div>
                             </div>
@@ -243,6 +244,20 @@ export default function SponsorChildren({ children, mySponsorship, filters }: Pr
                                 {children.data.map((child) => (
                                     <Card key={child.id} className="transition-shadow hover:shadow-lg">
                                         <CardHeader className="pb-3">
+                                            {/* Child Image */}
+                                            {child.photo && (
+                                                <div className="mb-4 h-48 w-full overflow-hidden rounded-lg bg-gray-100">
+                                                    <img
+                                                        src={child.photo.startsWith('/storage') ? child.photo : `/storage/children/${child.photo}`}
+                                                        alt={child.name}
+                                                        className="h-full w-full object-cover"
+                                                        onError={(e) => {
+                                                            e.currentTarget.src = '/placeholder-child.jpg';
+                                                        }}
+                                                    />
+                                                </div>
+                                            )}
+
                                             <div className="flex items-center justify-between">
                                                 <CardTitle className="text-lg">{child.name}</CardTitle>
                                                 {isSponsoring(child.id) && (

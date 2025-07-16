@@ -5,7 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { Activity, ArrowLeft, Award, BookOpen, Calendar, GraduationCap, Heart, MapPin, Stethoscope, TrendingUp, User } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -103,7 +103,7 @@ export default function SponsorChildProfile({ child, isSponsoring, isAvailable, 
 
             if (response.ok) {
                 toast.success(`You are now sponsoring ${child.name}! Thank you for making a difference.`);
-                router.visit('/sponsor/my-sponsorships');
+                window.location.href = '/sponsor/my-sponsorships';
             } else {
                 const data = await response.json();
                 toast.error(data.message || 'Failed to create sponsorship. Please try again.');
@@ -196,6 +196,23 @@ export default function SponsorChildProfile({ child, isSponsoring, isAvailable, 
                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
                     {/* Left Column - Child Information */}
                     <div className="space-y-6 lg:col-span-2">
+                        {/* Child Photo */}
+                        {child.photo && (
+                            <Card>
+                                <CardContent className="p-6">
+                                    <div className="h-64 w-full overflow-hidden rounded-lg bg-gray-100">
+                                        <img
+                                            src={child.photo.startsWith('/storage') ? child.photo : `/storage/children/${child.photo}`}
+                                            alt={child.name}
+                                            className="h-full w-full object-cover"
+                                            onError={(e) => {
+                                                e.currentTarget.src = '/placeholder-child.jpg';
+                                            }}
+                                        />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
                         {/* Basic Information */}
                         <Card>
                             <CardHeader>

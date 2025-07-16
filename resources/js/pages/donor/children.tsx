@@ -84,7 +84,13 @@ export default function DonorChildren({ children }: Props) {
                                         {(child.image || child.photo) && (
                                             <div className="mb-4 h-48 w-full overflow-hidden rounded-lg bg-gray-100">
                                                 <img
-                                                    src={child.image || child.photo || '/placeholder-child.jpg'}
+                                                    src={
+                                                        child.image?.startsWith('/storage')
+                                                            ? child.image
+                                                            : child.photo?.startsWith('/storage')
+                                                              ? child.photo
+                                                              : `/storage/children/${child.image || child.photo}`
+                                                    }
                                                     alt={child.name || `${child.first_name} ${child.last_name}`}
                                                     className="h-full w-full object-cover"
                                                     onError={(e) => {

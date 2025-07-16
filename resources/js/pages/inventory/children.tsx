@@ -24,6 +24,7 @@ export default function ChildrenPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead>Photo</TableHead>
                                 <TableHead>Name</TableHead>
                                 <TableHead>Date of Birth</TableHead>
                                 <TableHead>Gender</TableHead>
@@ -36,6 +37,30 @@ export default function ChildrenPage() {
                             {children ? (
                                 children?.map((child) => (
                                     <TableRow key={child.id}>
+                                        <TableCell>
+                                            {child.image || child.photo ? (
+                                                <div className="h-12 w-12 overflow-hidden rounded-full bg-gray-100">
+                                                    <img
+                                                        src={
+                                                            child.image?.startsWith('/storage')
+                                                                ? child.image
+                                                                : child.photo?.startsWith('/storage')
+                                                                  ? child.photo
+                                                                  : `/storage/children/${child.image || child.photo}`
+                                                        }
+                                                        alt={`${child.first_name} ${child.last_name}`}
+                                                        className="h-full w-full object-cover"
+                                                        onError={(e) => {
+                                                            e.currentTarget.src = '/placeholder-child.jpg';
+                                                        }}
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200">
+                                                    <span className="text-xs text-gray-500">No Photo</span>
+                                                </div>
+                                            )}
+                                        </TableCell>
                                         <TableCell>
                                             {child.first_name} {child.last_name}
                                         </TableCell>
@@ -56,7 +81,7 @@ export default function ChildrenPage() {
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell className="text-center" colSpan={6}>
+                                    <TableCell className="text-center" colSpan={7}>
                                         No Children in the system yet
                                     </TableCell>
                                 </TableRow>

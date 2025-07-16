@@ -69,12 +69,21 @@ export default function ChildViewPage() {
         <AppLayout>
             <div className="mx-auto max-w-4xl space-y-6 rounded-lg bg-white p-6 shadow-md">
                 {/* 🖼️ Child Photo */}
-                {child.image && (
+                {(child.image || child.photo) && (
                     <div className="flex justify-center">
                         <img
-                            src={child.image}
+                            src={
+                                child.image?.startsWith('/storage')
+                                    ? child.image
+                                    : child.photo?.startsWith('/storage')
+                                      ? child.photo
+                                      : `/storage/children/${child.image || child.photo}`
+                            }
                             alt={`${child.first_name} ${child.last_name}`}
                             className="h-48 w-48 rounded-full border-4 border-gray-300 object-cover shadow-md"
+                            onError={(e) => {
+                                e.currentTarget.src = '/placeholder-child.jpg';
+                            }}
                         />
                     </div>
                 )}

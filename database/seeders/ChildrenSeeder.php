@@ -32,7 +32,8 @@ class ChildrenSeeder extends Seeder
                 'guardian_name' => 'Mary Phiri',
                 'guardian_contact' => '+265 888 123 456',
                 'education_level' => 'Primary',
-                'image' => '/storage/children/child1.jpg',
+                'image' => '/storage/children/10oSvvqiSmIWurhletsoRQrbX3yPTNl4r01QVEHE.png',
+                'photo' => '10oSvvqiSmIWurhletsoRQrbX3yPTNl4r01QVEHE.png',
             ],
             [
                 'first_name' => 'Thandiwe',
@@ -53,7 +54,8 @@ class ChildrenSeeder extends Seeder
                 'guardian_name' => 'James Mwale',
                 'guardian_contact' => '+265 999 234 567',
                 'education_level' => 'Secondary',
-                'image' => '/storage/children/child2.jpg',
+                'image' => '/storage/children/G9n8L4CBbhcUxY7kPQ0OiTAcqXglTzIKgl2qS2md.png',
+                'photo' => 'G9n8L4CBbhcUxY7kPQ0OiTAcqXglTzIKgl2qS2md.png',
             ],
             [
                 'first_name' => 'Mphatso',
@@ -74,7 +76,8 @@ class ChildrenSeeder extends Seeder
                 'guardian_name' => 'Grace Banda',
                 'guardian_contact' => '+265 777 345 678',
                 'education_level' => 'Primary',
-                'image' => '/storage/children/child3.jpg',
+                'image' => '/storage/children/HkAM7Xh3FAKZrVGz92xhUSXsjEYfv6HaJUmR4iGD.png',
+                'photo' => 'HkAM7Xh3FAKZrVGz92xhUSXsjEYfv6HaJUmR4iGD.png',
             ],
         ];
 
