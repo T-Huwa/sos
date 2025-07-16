@@ -160,15 +160,60 @@ export default function DonorDonatePage() {
                 body: JSON.stringify(payload),
             });
 
-            const data = await response.json();
+            // Check if response is JSON or text (URL)
+            const contentType = response.headers.get('content-type');
+            let data;
+
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                // Response is likely a URL string
+                const url = await response.text();
+                data = { checkout_url: url };
+            }
 
             if (!response.ok) {
-                throw new Error(data.message || 'Donation failed');
+                // Handle validation errors
+                if (response.status === 422 && data.errors) {
+                    const errorMessages = Object.values(data.errors).flat();
+                    errorMessages.forEach((error: any) => {
+                        toast.error(error);
+                    });
+                } else {
+                    toast.error(data.message || 'Donation failed. Please try again.');
+                }
+                return;
             }
 
             if (donationType === 'cash' && data.checkout_url) {
-                // Redirect to PayChangu for payment
-                window.location.href = data.checkout_url;
+                // Show feedback before redirect
+                const successMessage = 'Payment form generated! Redirecting to PayChangu...';
+
+                try {
+                    toast.success(successMessage);
+                } catch (toastError) {
+                    alert(successMessage);
+                }
+
+                // Small delay to show the feedback
+                setTimeout(() => {
+                    window.location.href = data.checkout_url;
+                }, 1500);
+            } else if (donationType === 'items' && data.success) {
+                // Handle successful item donation
+                toast.success(data.message || 'Thank you for your item donation!');
+
+                // Reset form
+                setAmount('');
+                setMessage('');
+                setItems([{ name: '', quantity: 1, description: '' }]);
+                setSelectedChildId('');
+                setDonatingToChild(false);
+
+                // Show additional success message
+                setTimeout(() => {
+                    toast.success('We will contact you soon to arrange pickup of your donated items.');
+                }, 2000);
             } else {
                 toast.success('Thank you for your donation!');
                 // Reset form
@@ -180,7 +225,14 @@ export default function DonorDonatePage() {
             }
         } catch (error) {
             console.error('Donation error:', error);
-            toast.error('Donation failed. Please try again.');
+            const errorMessage = 'Donation failed. Please try again.';
+
+            // Try toast first, fallback to alert
+            try {
+                toast.error(errorMessage);
+            } catch (toastError) {
+                alert(errorMessage);
+            }
         } finally {
             setLoading(false);
         }

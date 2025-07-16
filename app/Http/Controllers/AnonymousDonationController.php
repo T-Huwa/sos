@@ -77,7 +77,7 @@ class AnonymousDonationController extends Controller
             'is_anonymous' => true,
             'anonymous_name' => $validated['anonymous_name'],
             'anonymous_email' => $validated['anonymous_email'],
-            'checkout_ref' => Str::uuid(),
+            'checkout_ref' => 'anon-' . time() . '-' . Str::random(8), // More unique reference
         ]);
 
         // Generate PayChangu checkout URL
@@ -128,7 +128,7 @@ class AnonymousDonationController extends Controller
     private function generatePayChanguCheckoutUrl(Donation $donation)
     {
         // Use environment variables for security - don't hardcode keys in public repos
-        $publicKey ='PUB-TEST-FYCqr5vuwEBwhD0io289I835h6RYFWcs'; //env('PAYCHANGU_PUBLIC_KEY', 'PUB-TEST-FYCqr5vuwEBwhD0io289I835h6RYFWcs');
+        $publicKey = 'pub-test-729HgrhaVYJEvic35Dvy2V0WjUieVX7a';//'PUB-TEST-FYCqr5vuwEBwhD0io289I835h6RYFWcs'; //env('PAYCHANGU_PUBLIC_KEY', 'PUB-TEST-FYCqr5vuwEBwhD0io289I835h6RYFWcs');
 
         // Use the actual domain from APP_URL or a publicly accessible URL
         $baseUrl = "http://localhost:8000";//config('app.url');
@@ -146,21 +146,28 @@ class AnonymousDonationController extends Controller
         $returnUrl = $baseUrl . "/anonymous-donation/return";
 
         // Build the form data for PayChangu
+        $userNameParts = explode(' ', $donation->anonymous_name);
+        $firstName = $userNameParts[0] ?? 'Anonymous';
+        $lastName = count($userNameParts) > 1 ? implode(' ', array_slice($userNameParts, 1)) : '';
+
         $formData = [
             'public_key' => $publicKey,
             'callback_url' => $callbackUrl,
             'return_url' => $returnUrl,
             'tx_ref' => $donation->checkout_ref,
-            'amount' => $donation->amount,
+            'amount' => (string) $donation->amount, // Ensure it's a string
             'currency' => 'MWK',
             'email' => $donation->anonymous_email,
-            'first_name' => explode(' ', $donation->anonymous_name)[0],
-            'last_name' => implode(' ', array_slice(explode(' ', $donation->anonymous_name), 1)) ?: '',
+            'first_name' => $firstName,
+            'last_name' => $lastName,
             'title' => 'Anonymous Donation',
             'description' => 'Anonymous donation to SOS',
             'meta[donation_id]' => $donation->id,
             'meta[type]' => 'anonymous_donation',
         ];
+
+        // Debug: Log the form data to see what's being sent
+        Log::info('PayChangu Form Data for Anonymous Donation:', $formData);
 
         // Create HTML form that auto-submits to PayChangu
         $formHtml = '<html><body><form id="paychangu-form" method="POST" action="https://api.paychangu.com/hosted-payment-page">';
@@ -172,7 +179,7 @@ class AnonymousDonationController extends Controller
         $formHtml .= '</form><script>document.getElementById("paychangu-form").submit();</script></body></html>';
 
         // Save the form to a temporary file and return the URL
-        $tempFile = 'paychangu_' . $donation->checkout_ref . '.html';
+        $tempFile = 'paychangu_' . $donation->checkout_ref . '_' . time() . '.html';
         $tempPath = storage_path('app/public/' . $tempFile);
         file_put_contents($tempPath, $formHtml);
 

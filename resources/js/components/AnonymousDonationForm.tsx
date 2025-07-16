@@ -108,7 +108,17 @@ const AnonymousDonationForm: React.FC = () => {
                 body: JSON.stringify(payload),
             });
 
-            const data = await res.json();
+            // Check if response is JSON or text (URL)
+            const contentType = res.headers.get('content-type');
+            let data;
+
+            if (contentType && contentType.includes('application/json')) {
+                data = await res.json();
+            } else {
+                // Response is likely a URL string
+                const url = await res.text();
+                data = { checkout_url: url };
+            }
 
             if (!res.ok) {
                 // Handle validation errors
@@ -131,10 +141,19 @@ const AnonymousDonationForm: React.FC = () => {
             setErrors({});
 
             if (donationType === 'cash' && data.checkout_url) {
-                // Redirect to PayChangu for payment
-                console.log(data);
-                alert('url generated. Redirecting...');
-                window.location.href = data.checkout_url;
+                // Show feedback before redirect
+                const successMessage = 'Payment form generated! Redirecting to PayChangu...';
+
+                try {
+                    toast.success(successMessage);
+                } catch (toastError) {
+                    alert(successMessage);
+                }
+
+                // Small delay to show the feedback
+                setTimeout(() => {
+                    window.location.href = data.checkout_url;
+                }, 1500);
             } else if (donationType === 'items' && data.success) {
                 // Handle successful item donation
                 toast.success(data.message || 'Thank you for your item donation!');
@@ -161,7 +180,14 @@ const AnonymousDonationForm: React.FC = () => {
             }
         } catch (error) {
             console.error('Donation error:', error);
-            toast.error('Donation failed. Please try again.');
+            const errorMessage = 'Donation failed. Please try again.';
+
+            // Try toast first, fallback to alert
+            try {
+                toast.error(errorMessage);
+            } catch (toastError) {
+                alert(errorMessage);
+            }
         } finally {
             setLoading(false);
         }
