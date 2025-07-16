@@ -361,14 +361,23 @@ function DonationsTable({ donations }: { donations: Donation[] }) {
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-2">
                                                 <Package className="h-4 w-4 text-purple-500" />
-                                                <span className="font-medium text-purple-600">{donation.items.length} item type(s)</span>
+                                                <span className="font-medium text-purple-600">{donation.items?.length || 0} item type(s)</span>
                                             </div>
                                             <div className="space-y-1">
-                                                {donation.items.map((item) => (
-                                                    <div key={item.id} className="text-sm text-gray-600">
-                                                        <span className="font-medium">{item.quantity}×</span> {item.item_name}
-                                                        {item.estimated_value && (
-                                                            <span className="ml-2 text-green-600">(MWK {item.estimated_value.toLocaleString()})</span>
+                                                {donation.items?.map((item) => (
+                                                    <div key={item.id} className="flex items-center justify-between text-sm text-gray-600">
+                                                        <div>
+                                                            <span className="font-medium">{item.quantity}×</span> {item.item_name}
+                                                            {item.estimated_value && (
+                                                                <span className="ml-2 text-green-600">
+                                                                    (MWK {item.estimated_value.toLocaleString()})
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        {item.in_inventory && (
+                                                            <Badge variant="outline" className="text-xs text-green-600">
+                                                                In Inventory
+                                                            </Badge>
                                                         )}
                                                     </div>
                                                 ))}
@@ -397,9 +406,15 @@ function DonationsTable({ donations }: { donations: Donation[] }) {
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={() => handleAddToInventory(donation.id)}
-                                                disabled={loadingInventory === donation.id}
+                                                disabled={
+                                                    loadingInventory === donation.id || (donation.items || []).every((item: any) => item.in_inventory)
+                                                }
                                             >
-                                                {loadingInventory === donation.id ? 'Adding...' : 'Add to Inventory'}
+                                                {loadingInventory === donation.id
+                                                    ? 'Adding...'
+                                                    : (donation.items || []).every((item: any) => item.in_inventory)
+                                                      ? 'Already in Inventory'
+                                                      : 'Add to Inventory'}
                                             </Button>
                                         )}
                                     </div>

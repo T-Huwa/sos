@@ -35,7 +35,7 @@ class ChildController extends Controller
                         ? $donation->child->first_name . ' ' . $donation->child->last_name
                         : null,
                     'is_anonymous' => $donation->is_anonymous || !$donation->user,
-                    'items' => $donation->items->map(function ($item) {
+                    'items' => $donation->items->map(function ($item) use ($donation) {
                         // Check if this item is already in inventory
                         $inInventory = \App\Models\Inventory::where('item_name', $item->item_name)
                             ->where('source_donation_id', $donation->id)
