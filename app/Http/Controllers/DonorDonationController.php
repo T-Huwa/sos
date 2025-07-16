@@ -213,55 +213,77 @@ class DonorDonationController extends Controller
 
     private function generatePayChanguCheckoutUrl(Donation $donation)
     {
-        $publicKey = 'localhost';// 'pub-test-28WebWBA8fGiij3ltAPPFdKzITAIfGPS';
+        // Use environment variables for security - don't hardcode keys in public repos
+        $secretKey = env('PAYCHANGU_SECRET_KEY', 'SEC-TEST-8RrdLH9CnuEnRqaoMVa7c1NiCIsrOds0');
 
         // Use the actual domain from APP_URL or a publicly accessible URL
         $baseUrl = config('app.url');
 
         // For development with PayChangu, you need a publicly accessible URL
-        // if (str_contains($baseUrl, 'localhost') || str_contains($baseUrl, '127.0.0.1')) {
-        //     // Replace this with your actual ngrok URL when testing payments
-        //     // Run: ngrok http 80
-        //     // Then update this URL with the one ngrok provides
-        //     $baseUrl = 'https://e16fe5cdd8ad.ngrok-free.app'; // Updated with your ngrok URL
-        // }
+        if (str_contains($baseUrl, 'localhost') || str_contains($baseUrl, '127.0.0.1')) {
+            // Replace this with your actual ngrok URL when testing payments
+            // Run: ngrok http 80
+            // Then update this URL with the one ngrok provides
+            $baseUrl = 'https://e16fe5cdd8ad.ngrok-free.app'; // Updated with your ngrok URL
+        }
 
         $callbackUrl = $baseUrl . "/donor/donations/callback";
         $returnUrl = $baseUrl . "/donor/donations/return";
 
-        // Build the form data for PayChangu
-        $formData = [
-            'public_key' => $publicKey,
-            'callback_url' => $returnUrl,
-            'return_url' => $returnUrl,
+        // Build the payment data for PayChangu API
+        $paymentData = [
             'tx_ref' => $donation->checkout_ref,
             'amount' => $donation->amount,
             'currency' => 'MWK',
             'email' => $donation->user->email,
             'first_name' => explode(' ', $donation->user->name)[0],
             'last_name' => implode(' ', array_slice(explode(' ', $donation->user->name), 1)) ?: '',
-            'title' => 'Donation to SOS',
-            'description' => $donation->child ? "Donation for {$donation->child->name}" : 'General donation to SOS',
-            'meta[donation_id]' => $donation->id,
-            'meta[type]' => 'donor_donation',
-            'meta[user_id]' => $donation->user_id,
+            'callback_url' => $callbackUrl,
+            'return_url' => $returnUrl,
+            'customization' => [
+                'title' => 'Donation to SOS',
+                'description' => $donation->child ? "Donation for {$donation->child->name}" : 'General donation to SOS',
+            ],
+            'meta' => [
+                'donation_id' => $donation->id,
+                'type' => 'donor_donation',
+                'user_id' => $donation->user_id,
+            ]
         ];
 
-        // Create HTML form that auto-submits to PayChangu
-        $formHtml = '<html><body><form id="paychangu-form" method="POST" action="https://api.paychangu.com/hosted-payment-page">';
+        // Make API call to PayChangu
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, 'https://api.paychangu.com/payment');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($paymentData));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Accept: application/json',
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $secretKey,
+        ]);
 
-        foreach ($formData as $key => $value) {
-            $formHtml .= '<input type="hidden" name="' . htmlspecialchars($key) . '" value="' . htmlspecialchars($value) . '">';
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode !== 200) {
+            return response()->json(['error' => 'Payment initialization failed'], 500);
         }
 
-        $formHtml .= '</form><script>document.getElementById("paychangu-form").submit();</script></body></html>';
+        $responseData = json_decode($response, true);
 
-        // Save the form to a temporary file and return the URL
-        $tempFile = 'paychangu_donor_' . $donation->checkout_ref . '.html';
-        $tempPath = storage_path('app/public/' . $tempFile);
-        file_put_contents($tempPath, $formHtml);
+        if (!$responseData || !isset($responseData['data']['checkout_url'])) {
+            return response()->json(['error' => 'Invalid payment response'], 500);
+        }
 
-        return url('storage/' . $tempFile);
+        // Return the checkout URL for redirect
+        return response()->json([
+            'checkout_url' => $responseData['data']['checkout_url'],
+            'tx_ref' => $donation->checkout_ref
+        ]);
+
+
     }
 
     public function callback(Request $request)

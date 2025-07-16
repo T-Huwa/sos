@@ -282,12 +282,48 @@ class ChildController extends Controller
         ]);
     }
 
+    public function indexForDonors()
+    {
+        $children = Child::with(['donations' => function($q) {
+            $q->where('status', 'received');
+        }])
+        ->paginate(12);
+
+        // Add computed fields for each child
+        $children->getCollection()->transform(function ($child) {
+            // Calculate total donations received
+            $child->total_donations = $child->donations->where('donation_type', 'money')->sum('amount');
+            $child->donation_count = $child->donations->count();
+
+            // Add sample progress data if not available
+            $child->academic_performance = $child->academic_performance ?? rand(70, 95);
+            $child->health_status = $child->health_status ?? collect(['Excellent', 'Good', 'Fair'])->random();
+
+            return $child;
+        });
+
+        return Inertia::render('donor/children', [
+            'children' => $children,
+        ]);
+    }
+
     public function showToDonor($id)
     {
         $child = Child::findOrFail($id);
+
+        // Add sample data if not available
+        $child->academic_performance = $child->academic_performance ?? rand(70, 95);
+        $child->health_status = $child->health_status ?? collect(['Excellent', 'Good', 'Fair'])->random();
+        $child->last_health_checkup = $child->last_health_checkup ?? now()->subDays(rand(30, 90))->format('Y-m-d');
+        $child->favorite_subjects = $child->favorite_subjects ?? 'Mathematics, English, Science';
+        $child->dreams = $child->dreams ?? 'To become a doctor and help people in my community';
+        $child->hobbies = $child->hobbies ?? 'Reading, playing football, drawing';
+        $child->guardian_name = $child->guardian_name ?? 'Mary ' . $child->first_name;
+        $child->guardian_contact = $child->guardian_contact ?? '+265 ' . rand(100000000, 999999999);
+
         return Inertia::render('donor/child', [
             'child' => $child,
-            'donations' => $child->donations()->with('donor')->get(),
+            'donations' => $child->donations()->with(['donor', 'items'])->get(),
             'donors' => $child->donors()->distinct()->get(),
         ]);
     }

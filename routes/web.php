@@ -99,7 +99,7 @@ Route::middleware(['auth'])->prefix('sponsor')->group(function () {
 Route::middleware(['auth'])->prefix('donor')->group(function () {
     Route::get('/dashboard', fn () => Inertia::render('donor/dashboard'))->name('donor.dashboard');
     Route::get('/donations', fn () => Inertia::render('donor/donations'))->name('donor.donations');
-    Route::get('/children', fn () => Inertia::render('donor/children'))->name('donor.children');
+    Route::get('/children', [ChildController::class, 'indexForDonors'])->name('donor.children');
     Route::get('/donate', fn () => Inertia::render('donor/donate'))->name('donor.donate');
     Route::get('/history', fn () => Inertia::render('donor/history'))->name('donor.history');
 

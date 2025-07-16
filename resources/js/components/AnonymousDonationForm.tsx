@@ -25,6 +25,14 @@ const AnonymousDonationForm: React.FC = () => {
     // Item donation fields
     const [items, setItems] = useState<DonatedItem[]>([{ name: '', quantity: 1, description: '' }]);
 
+    // Form validation errors
+    const [errors, setErrors] = useState<Record<string, string[]>>({});
+
+    // Helper function to get error message for a field
+    const getFieldError = (fieldName: string) => {
+        return errors[fieldName] ? errors[fieldName][0] : '';
+    };
+
     const addItem = () => {
         setItems([...items, { name: '', quantity: 1, description: '' }]);
     };
@@ -97,12 +105,43 @@ const AnonymousDonationForm: React.FC = () => {
             const data = await res.json();
 
             if (!res.ok) {
-                throw new Error(data.message || 'Donation failed');
+                // Handle validation errors
+                if (res.status === 422 && data.errors) {
+                    // Set validation errors for form display
+                    setErrors(data.errors);
+
+                    // Display validation errors as toasts
+                    const errorMessages = Object.values(data.errors).flat();
+                    errorMessages.forEach((error: any) => {
+                        toast.error(error);
+                    });
+                } else {
+                    toast.error(data.message || 'Donation failed. Please try again.');
+                }
+                return;
             }
+
+            // Clear any previous errors on successful submission
+            setErrors({});
 
             if (donationType === 'cash' && data.checkout_url) {
                 // Redirect to PayChangu for payment
                 window.location.href = data.checkout_url;
+            } else if (donationType === 'items' && data.success) {
+                // Handle successful item donation
+                toast.success(data.message || 'Thank you for your item donation!');
+
+                // Reset form
+                setAmount('');
+                setMessage('');
+                setDonorName('');
+                setDonorEmail('');
+                setItems([{ name: '', quantity: 1, description: '' }]);
+
+                // Show additional success message
+                setTimeout(() => {
+                    toast.success('We will contact you soon to arrange pickup of your donated items.');
+                }, 2000);
             } else {
                 toast.success('Thank you for your anonymous donation!');
                 // Reset form
@@ -138,7 +177,9 @@ const AnonymousDonationForm: React.FC = () => {
                                 onChange={(e) => setDonorName(e.target.value)}
                                 disabled={loading}
                                 required
+                                className={getFieldError('anonymous_name') ? 'border-red-500 focus:border-red-500' : ''}
                             />
+                            {getFieldError('anonymous_name') && <p className="text-sm text-red-600">{getFieldError('anonymous_name')}</p>}
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="donorEmail">Your Email *</Label>
@@ -150,7 +191,9 @@ const AnonymousDonationForm: React.FC = () => {
                                 onChange={(e) => setDonorEmail(e.target.value)}
                                 disabled={loading}
                                 required
+                                className={getFieldError('anonymous_email') ? 'border-red-500 focus:border-red-500' : ''}
                             />
+                            {getFieldError('anonymous_email') && <p className="text-sm text-red-600">{getFieldError('anonymous_email')}</p>}
                         </div>
                     </div>
                 </div>
@@ -193,13 +236,15 @@ const AnonymousDonationForm: React.FC = () => {
                         <Input
                             id="amount"
                             type="number"
-                            placeholder="Enter amount"
+                            placeholder="Enter amount (minimum MWK 100)"
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                             disabled={loading}
-                            min="1"
+                            min="100"
                             required
+                            className={getFieldError('amount') ? 'border-red-500 focus:border-red-500' : ''}
                         />
+                        {getFieldError('amount') && <p className="text-sm text-red-600">{getFieldError('amount')}</p>}
                         <p className="text-sm text-gray-600">You will be redirected to PayChangu to complete your payment.</p>
                     </div>
                 )}

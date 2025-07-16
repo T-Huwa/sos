@@ -20,13 +20,34 @@ class AnonymousDonationController extends Controller
             'message' => 'nullable|string|max:1000',
 
             // Cash donation fields
-            'amount' => 'required_if:donation_type,cash|numeric|min:1',
+            'amount' => 'required_if:donation_type,cash|numeric|min:100',
 
             // Item donation fields
             'items' => 'required_if:donation_type,items|array|min:1',
             'items.*.name' => 'required|string|max:255',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.description' => 'nullable|string|max:500',
+        ], [
+            'donation_type.required' => 'Please select a donation type.',
+            'donation_type.in' => 'Invalid donation type selected.',
+            'anonymous_name.required' => 'Your name is required.',
+            'anonymous_name.max' => 'Name cannot exceed 255 characters.',
+            'anonymous_email.required' => 'Email address is required.',
+            'anonymous_email.email' => 'Please enter a valid email address.',
+            'anonymous_email.max' => 'Email address cannot exceed 255 characters.',
+            'message.max' => 'Message cannot exceed 1000 characters.',
+            'amount.required_if' => 'Amount is required for cash donations.',
+            'amount.numeric' => 'Amount must be a valid number.',
+            'amount.min' => 'Minimum donation amount is MWK 100.',
+            'items.required_if' => 'At least one item is required for item donations.',
+            'items.array' => 'Items must be provided as a list.',
+            'items.min' => 'At least one item is required for item donations.',
+            'items.*.name.required' => 'Item name is required.',
+            'items.*.name.max' => 'Item name cannot exceed 255 characters.',
+            'items.*.quantity.required' => 'Item quantity is required.',
+            'items.*.quantity.integer' => 'Item quantity must be a whole number.',
+            'items.*.quantity.min' => 'Item quantity must be at least 1.',
+            'items.*.description.max' => 'Item description cannot exceed 500 characters.',
         ]);
 
         try {
@@ -106,7 +127,8 @@ class AnonymousDonationController extends Controller
 
     private function generatePayChanguCheckoutUrl(Donation $donation)
     {
-        $publicKey = 'pub-test-729HgrhaVYJEvic35Dvy2V0WjUieVX7a';// 'pub-test-28WebWBA8fGiij3ltAPPFdKzITAIfGPS';
+        // Use environment variables for security - don't hardcode keys in public repos
+        $publicKey = env('PAYCHANGU_PUBLIC_KEY', 'PUB-TEST-FYCqr5vuwEBwhD0io289I835h6RYFWcs');
 
         // Use the actual domain from APP_URL or a publicly accessible URL
         $baseUrl = config('app.url');
@@ -126,7 +148,7 @@ class AnonymousDonationController extends Controller
         // Build the form data for PayChangu
         $formData = [
             'public_key' => $publicKey,
-            'callback_url' => $returnUrl,
+            'callback_url' => $callbackUrl,
             'return_url' => $returnUrl,
             'tx_ref' => $donation->checkout_ref,
             'amount' => $donation->amount,

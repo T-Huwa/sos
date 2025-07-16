@@ -32,6 +32,7 @@ class ChildrenSeeder extends Seeder
                 'guardian_name' => 'Mary Phiri',
                 'guardian_contact' => '+265 888 123 456',
                 'education_level' => 'Primary',
+                'image' => '/storage/children/child1.jpg',
             ],
             [
                 'first_name' => 'Thandiwe',
@@ -52,6 +53,7 @@ class ChildrenSeeder extends Seeder
                 'guardian_name' => 'James Mwale',
                 'guardian_contact' => '+265 999 234 567',
                 'education_level' => 'Secondary',
+                'image' => '/storage/children/child2.jpg',
             ],
             [
                 'first_name' => 'Mphatso',
@@ -72,6 +74,7 @@ class ChildrenSeeder extends Seeder
                 'guardian_name' => 'Grace Banda',
                 'guardian_contact' => '+265 777 345 678',
                 'education_level' => 'Primary',
+                'image' => '/storage/children/child3.jpg',
             ],
         ];
 
