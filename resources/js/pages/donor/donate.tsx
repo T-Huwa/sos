@@ -147,11 +147,15 @@ export default function DonorDonatePage() {
                     : { items: items.filter((item) => item.name.trim() && item.quantity > 0) }),
             };
 
+            // Get CSRF token from meta tag
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
             const response = await fetch('/donor/donations', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
+                    'X-CSRF-TOKEN': csrfToken || '',
                 },
                 body: JSON.stringify(payload),
             });

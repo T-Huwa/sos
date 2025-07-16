@@ -44,6 +44,9 @@
         @viteReactRefresh
         @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
         @inertiaHead
+
+        <!-- PayChangu Inline Script -->
+        <script src="https://api.paychangu.com/js/popup.js"></script>
     </head>
     <body class="font-sans antialiased">
         @inertia

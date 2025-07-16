@@ -96,9 +96,15 @@ const AnonymousDonationForm: React.FC = () => {
                     : { items: items.filter((item) => item.name.trim() && item.quantity > 0) }),
             };
 
+            // Get CSRF token from meta tag
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
             const res = await fetch('/anonymous-donation', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken || '',
+                },
                 body: JSON.stringify(payload),
             });
 
@@ -126,6 +132,8 @@ const AnonymousDonationForm: React.FC = () => {
 
             if (donationType === 'cash' && data.checkout_url) {
                 // Redirect to PayChangu for payment
+                console.log(data);
+                alert('url generated. Redirecting...');
                 window.location.href = data.checkout_url;
             } else if (donationType === 'items' && data.success) {
                 // Handle successful item donation

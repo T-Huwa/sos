@@ -3,9 +3,54 @@ import { SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function Welcome() {
     const { auth } = usePage<SharedData>().props;
+
+    // PayChangu test function
+    const testPayChangu = () => {
+        // Check if PayChangu is loaded
+        if (typeof (window as any).PayChangu === 'undefined') {
+            toast.error('PayChangu not loaded. Please refresh and try again.');
+            return;
+        }
+
+        const paychangu = new (window as any).PayChangu();
+
+        paychangu.open({
+            public_key: 'PUB-TEST-FYCqr5vuwEBwhD0io289I835h6RYFWcs',
+            tx_ref: 'test-' + Math.floor(Math.random() * 1000000000 + 1),
+            amount: 100,
+            currency: 'MWK',
+            email: 'test@example.com',
+            first_name: 'Test',
+            last_name: 'User',
+            callback_url: window.location.origin + '/anonymous-donation/callback',
+            return_url: window.location.origin + '/anonymous-donation/return',
+            customization: {
+                title: 'Test Payment',
+                description: 'Testing PayChangu integration',
+                logo: window.location.origin + '/logo.svg',
+            },
+            meta: {
+                test: 'true',
+                source: 'welcome_page',
+            },
+            onSuccess: (response: any) => {
+                console.log('Payment successful:', response);
+                toast.success('Payment successful! Check console for details.');
+            },
+            onError: (error: any) => {
+                console.error('Payment failed:', error);
+                toast.error('Payment failed. Check console for details.');
+            },
+            onClose: () => {
+                console.log('Payment popup closed');
+                toast.info('Payment popup was closed.');
+            },
+        });
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white text-gray-800 dark:from-gray-900 dark:to-black dark:text-gray-100">
@@ -55,16 +100,18 @@ export default function Welcome() {
                 </motion.p>
 
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5, duration: 0.5 }}>
-                    <Link href="/login">
-                        <Button size="lg" className="rounded-2xl px-8 py-6 text-lg shadow-xl">
-                            <Sparkles className="mr-2" /> Login to Get Started
-                        </Button>
-                    </Link>
-                    <Link href={route('anonymous.donation')}>
-                        <Button size="lg" className="ml-2 rounded-2xl px-8 py-6 text-lg shadow-xl">
-                            Make anonymous donation
-                        </Button>
-                    </Link>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
+                        <Link href="/login">
+                            <Button size="lg" className="rounded-2xl px-8 py-6 text-lg shadow-xl">
+                                <Sparkles className="mr-2" /> Login to Get Started
+                            </Button>
+                        </Link>
+                        <Link href={route('anonymous.donation')}>
+                            <Button size="lg" className="rounded-2xl px-8 py-6 text-lg shadow-xl">
+                                Make anonymous donation
+                            </Button>
+                        </Link>
+                    </div>
                 </motion.div>
             </div>
         </div>
