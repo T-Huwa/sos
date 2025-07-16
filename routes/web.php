@@ -150,7 +150,7 @@ Route::middleware(['auth'])->prefix('inventory')->group(function () {
     Route::get('/communications', fn () => Inertia::render('inventory/communications'))->name('inventory.communications');
     Route::get('/donations', [ChildController::class, 'getDonations'])->name('inventory.donations');
     Route::post('/donations/{donation}/add-to-inventory', [ChildController::class, 'addDonationToInventory'])->name('inventory.donations.add-to-inventory');
-    Route::get('/inventory', fn () => Inertia::render('inventory/inventory'))->name('inventory.inventory');
+    Route::get('/inventory', [ChildController::class, 'getInventory'])->name('inventory.inventory');
     Route::get('/reports', fn () => Inertia::render('inventory/reports'))->name('inventory.reports');
 });
 

@@ -16,6 +16,7 @@ interface DonatedItem {
     item_name: string;
     quantity: number;
     estimated_value?: number;
+    in_inventory?: boolean;
 }
 
 interface Donation {
@@ -254,9 +255,20 @@ function DonationsTable({ donations }: { donations: Donation[] }) {
             const data = await response.json();
 
             if (response.ok) {
-                toast.success(data.message);
-                // Optionally refresh the page or update the UI
-                window.location.reload();
+                if (data.added_count > 0) {
+                    toast.success(`Successfully added ${data.added_count} item type(s) to inventory!`);
+                } else {
+                    toast.info(data.message);
+                }
+
+                if (data.skipped_count > 0) {
+                    toast.info(`${data.skipped_count} item(s) were already in inventory.`);
+                }
+
+                // Refresh the page to show updated status
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
             } else {
                 toast.error(data.message);
             }

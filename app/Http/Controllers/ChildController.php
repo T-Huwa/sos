@@ -36,11 +36,17 @@ class ChildController extends Controller
                         : null,
                     'is_anonymous' => $donation->is_anonymous || !$donation->user,
                     'items' => $donation->items->map(function ($item) {
+                        // Check if this item is already in inventory
+                        $inInventory = \App\Models\Inventory::where('item_name', $item->item_name)
+                            ->where('source_donation_id', $donation->id)
+                            ->exists();
+
                         return [
                             'id' => $item->id,
                             'item_name' => $item->item_name,
                             'quantity' => $item->quantity,
                             'estimated_value' => $item->estimated_value,
+                            'in_inventory' => $inInventory,
                         ];
                     }),
                 ];
@@ -55,15 +61,22 @@ class ChildController extends Controller
     {
         $donation = Donation::with('items')->findOrFail($donationId);
 
-        if ($donation->donation_type !== 'goods' || $donation->status !== 'received') {
-            return response()->json(['message' => 'Only received item donations can be added to inventory'], 400);
+        if ($donation->donation_type !== 'goods') {
+            return response()->json(['message' => 'Only item donations can be added to inventory'], 400);
+        }
+
+        if ($donation->status !== 'received') {
+            return response()->json(['message' => 'Only received donations can be added to inventory'], 400);
         }
 
         try {
             DB::beginTransaction();
 
+            $addedItems = [];
+            $skippedItems = [];
+
             foreach ($donation->items as $item) {
-                // Check if item already exists in inventory
+                // Check if this specific donation item already exists in inventory
                 $existingInventory = \App\Models\Inventory::where('item_name', $item->item_name)
                     ->where('source_donation_id', $donation->id)
                     ->first();
@@ -72,18 +85,105 @@ class ChildController extends Controller
                     \App\Models\Inventory::create([
                         'item_name' => $item->item_name,
                         'quantity' => $item->quantity,
-                        'category' => 'donated_items', // Default category
+                        'category' => $this->categorizeItem($item->item_name),
                         'source_donation_id' => $donation->id,
                         'location' => 'warehouse', // Default location
                     ]);
+                    $addedItems[] = $item->item_name . ' (Qty: ' . $item->quantity . ')';
+                } else {
+                    $skippedItems[] = $item->item_name;
                 }
             }
 
             DB::commit();
-            return response()->json(['message' => 'Items successfully added to inventory']);
+
+            $message = '';
+            if (count($addedItems) > 0) {
+                $message .= 'Successfully added to inventory: ' . implode(', ', $addedItems);
+            }
+            if (count($skippedItems) > 0) {
+                if ($message) $message .= '. ';
+                $message .= 'Already in inventory: ' . implode(', ', $skippedItems);
+            }
+
+            return response()->json([
+                'message' => $message ?: 'No items were added to inventory',
+                'added_count' => count($addedItems),
+                'skipped_count' => count($skippedItems)
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Failed to add items to inventory'], 500);
+            return response()->json(['message' => 'Failed to add items to inventory: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function getInventory()
+    {
+        $inventoryItems = \App\Models\Inventory::select('item_name', 'category', 'location')
+            ->selectRaw('SUM(quantity) as total_quantity')
+            ->selectRaw('COUNT(DISTINCT source_donation_id) as donation_count')
+            ->selectRaw('MIN(created_at) as first_added')
+            ->selectRaw('MAX(created_at) as last_updated')
+            ->groupBy('item_name', 'category', 'location')
+            ->orderBy('item_name')
+            ->get()
+            ->map(function ($item) {
+                // Calculate status based on quantity thresholds
+                $status = 'Good';
+                $threshold = 20; // Default threshold
+
+                if ($item->total_quantity <= 5) {
+                    $status = 'Critical';
+                } elseif ($item->total_quantity <= 15) {
+                    $status = 'Low';
+                }
+
+                return [
+                    'item_name' => $item->item_name,
+                    'total_quantity' => $item->total_quantity,
+                    'category' => $item->category,
+                    'location' => $item->location,
+                    'donation_count' => $item->donation_count,
+                    'first_added' => $item->first_added,
+                    'last_updated' => $item->last_updated,
+                    'status' => $status,
+                    'threshold' => $threshold,
+                ];
+            });
+
+        // Get summary statistics
+        $totalItems = $inventoryItems->sum('total_quantity');
+        $totalItemTypes = $inventoryItems->count();
+        $criticalItems = $inventoryItems->where('status', 'Critical')->count();
+        $lowStockItems = $inventoryItems->where('status', 'Low')->count();
+
+        return Inertia::render('inventory/inventory', [
+            'inventoryItems' => $inventoryItems,
+            'statistics' => [
+                'total_items' => $totalItems,
+                'total_item_types' => $totalItemTypes,
+                'critical_items' => $criticalItems,
+                'low_stock_items' => $lowStockItems,
+            ],
+        ]);
+    }
+
+    private function categorizeItem($itemName)
+    {
+        $itemName = strtolower($itemName);
+
+        if (str_contains($itemName, 'school') || str_contains($itemName, 'book') || str_contains($itemName, 'pen') || str_contains($itemName, 'pencil') || str_contains($itemName, 'uniform')) {
+            return 'education';
+        } elseif (str_contains($itemName, 'food') || str_contains($itemName, 'meal') || str_contains($itemName, 'nutrition')) {
+            return 'nutrition';
+        } elseif (str_contains($itemName, 'cloth') || str_contains($itemName, 'shirt') || str_contains($itemName, 'dress') || str_contains($itemName, 'shoe')) {
+            return 'clothing';
+        } elseif (str_contains($itemName, 'medical') || str_contains($itemName, 'medicine') || str_contains($itemName, 'health')) {
+            return 'medical';
+        } elseif (str_contains($itemName, 'toy') || str_contains($itemName, 'game') || str_contains($itemName, 'play')) {
+            return 'recreation';
+        } else {
+            return 'general';
         }
     }
 
