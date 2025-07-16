@@ -213,13 +213,18 @@ class DonorDonationController extends Controller
 
     private function generatePayChanguCheckoutUrl(Donation $donation)
     {
-        $publicKey = 'pub-test-28WebWBA8fGiij3ltAPPFdKzITAIfGPS';
+        $publicKey = 'localhost';// 'pub-test-28WebWBA8fGiij3ltAPPFdKzITAIfGPS';
 
         // Use the actual domain from APP_URL or a publicly accessible URL
         $baseUrl = config('app.url');
-        if (str_contains($baseUrl, 'localhost') || str_contains($baseUrl, '127.0.0.1')) {
-            $baseUrl = 'https://cb230e0ea1ec.ngrok-free.app';
-        }
+
+        // For development with PayChangu, you need a publicly accessible URL
+        // if (str_contains($baseUrl, 'localhost') || str_contains($baseUrl, '127.0.0.1')) {
+        //     // Replace this with your actual ngrok URL when testing payments
+        //     // Run: ngrok http 80
+        //     // Then update this URL with the one ngrok provides
+        //     $baseUrl = 'https://your-ngrok-url.ngrok-free.app'; // Update this with your ngrok URL
+        // }
 
         $callbackUrl = $baseUrl . "/donor/donations/callback";
         $returnUrl = $baseUrl . "/donor/donations/return";

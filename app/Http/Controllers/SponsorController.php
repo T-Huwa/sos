@@ -81,7 +81,7 @@ class SponsorController extends Controller
     public function showChild($id)
     {
         $user = Auth::user();
-        
+
         $child = Child::with(['sponsorships' => function($q) {
             $q->where('active', true)->with('sponsor');
         }])->findOrFail($id);
@@ -94,6 +94,16 @@ class SponsorController extends Controller
 
         // Check if child is available for sponsorship
         $isAvailable = !$child->sponsorships->where('active', true)->count() || $isSponsoring;
+
+        // Add sample progress data for demonstration
+        $child->academic_performance = $child->academic_performance ?? rand(70, 95);
+        $child->health_status = $child->health_status ?? collect(['Excellent', 'Good', 'Fair'])->random();
+        $child->last_health_checkup = $child->last_health_checkup ?? now()->subDays(rand(30, 90))->format('Y-m-d');
+        $child->favorite_subjects = $child->favorite_subjects ?? 'Mathematics, English, Science';
+        $child->dreams = $child->dreams ?? 'To become a doctor and help people in my community';
+        $child->hobbies = $child->hobbies ?? 'Reading, playing football, drawing';
+        $child->guardian_name = $child->guardian_name ?? 'Mary ' . $child->name;
+        $child->guardian_contact = $child->guardian_contact ?? '+265 ' . rand(100000000, 999999999);
 
         return Inertia::render('sponsor/child', [
             'child' => $child,
@@ -152,17 +162,28 @@ class SponsorController extends Controller
     public function mySponsorship()
     {
         $user = Auth::user();
-        
+
         $sponsorships = Sponsorship::where('user_id', $user->id)
             ->where('active', true)
             ->with(['child'])
             ->get();
 
+        // Add sample progress data for each sponsored child
+        $sponsorships->each(function($sponsorship) {
+            $child = $sponsorship->child;
+            $child->academic_performance = $child->academic_performance ?? rand(70, 95);
+            $child->health_status = $child->health_status ?? collect(['Excellent', 'Good', 'Fair'])->random();
+            $child->last_health_checkup = $child->last_health_checkup ?? now()->subDays(rand(30, 90))->format('Y-m-d');
+            $child->favorite_subjects = $child->favorite_subjects ?? 'Mathematics, English, Science';
+            $child->dreams = $child->dreams ?? 'To become a doctor and help people in my community';
+            $child->hobbies = $child->hobbies ?? 'Reading, playing football, drawing';
+        });
+
         // Calculate statistics
         $stats = [
             'total_sponsored' => $sponsorships->count(),
             'total_contributed' => 0, // This would come from donations if implemented
-            'sponsorship_duration' => $sponsorships->min('start_date') ? 
+            'sponsorship_duration' => $sponsorships->min('start_date') ?
                 now()->diffInMonths($sponsorships->min('start_date')) : 0,
         ];
 

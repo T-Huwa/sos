@@ -106,14 +106,18 @@ class AnonymousDonationController extends Controller
 
     private function generatePayChanguCheckoutUrl(Donation $donation)
     {
-        $publicKey = 'pub-test-28WebWBA8fGiij3ltAPPFdKzITAIfGPS';
+        $publicKey = 'pub-test-729HgrhaVYJEvic35Dvy2V0WjUieVX7a';// 'pub-test-28WebWBA8fGiij3ltAPPFdKzITAIfGPS';
 
         // Use the actual domain from APP_URL or a publicly accessible URL
         $baseUrl = config('app.url');
+
+        // For development with PayChangu, you need a publicly accessible URL
+        // Use ngrok or similar to expose your localhost:80 to the internet
         if (str_contains($baseUrl, 'localhost') || str_contains($baseUrl, '127.0.0.1')) {
-            // For development, you might want to use ngrok or similar
-            // For now, we'll handle this gracefully by using a placeholder
-            $baseUrl = 'https://e87b387bf8a0.ngrok-free.app'; // Replace with actual domain in production
+            // Replace this with your actual ngrok URL when testing payments
+            // Run: ngrok http 80
+            // Then update this URL with the one ngrok provides
+            $baseUrl = 'https://your-ngrok-url.ngrok-free.app'; // Update this with your ngrok URL
         }
 
         $callbackUrl = $baseUrl . "/anonymous-donation/callback";
