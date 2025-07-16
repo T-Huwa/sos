@@ -205,7 +205,7 @@ class ChildController extends Controller
         $child = Child::findOrFail($id);
         return Inertia::render('inventory/child', [
             'child' => $child,
-            'donations' => $child->donations()->with('donor')->get(),
+            'donations' => $child->donations()->with(['donor', 'items'])->get(),
             'donors' => $child->donors()->distinct()->get(),
         ]);
     }

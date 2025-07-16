@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { DollarSign, File, FileChartPie, FileEdit, Folder, History, LayoutDashboard, MessageCircle, Users, Users2 } from 'lucide-react';
+import { DollarSign, File, Folder, History, LayoutDashboard, MessageCircle, Users, Users2 } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -33,24 +33,24 @@ const mainNavItems: NavItem[] = [
         icon: Users,
         role: ['inventory_manager'],
     },
-    {
-        title: 'Communications',
-        href: route('inventory.communications'),
-        icon: FileEdit,
-        role: ['inventory_manager'],
-    },
+    // {
+    //     title: 'Communications',
+    //     href: route('inventory.communications'),
+    //     icon: FileEdit,
+    //     role: ['inventory_manager'],
+    // },
     {
         title: 'Donations',
         href: route('inventory.donations'),
         icon: DollarSign,
         role: ['inventory_manager'],
     },
-    {
-        title: 'Reports',
-        href: route('inventory.reports'),
-        icon: FileChartPie,
-        role: ['inventory_manager'],
-    },
+    // {
+    //     title: 'Reports',
+    //     href: route('inventory.reports'),
+    //     icon: FileChartPie,
+    //     role: ['inventory_manager'],
+    // },
 
     // donor routes
     {

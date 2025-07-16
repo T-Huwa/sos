@@ -280,7 +280,7 @@ export default function DonorChildViewPage() {
                                                             )}
                                                         </div>
                                                         <div>
-                                                            <p className="font-medium">{donation?.donor?.name || 'Anonymous'}</p>
+                                                            <p className="font-medium">{donation?.donor?.full || 'Anonymous'}</p>
                                                             <p className="text-sm text-gray-600">
                                                                 {formatAmount(donation.amount, donation.donation_type)} •{' '}
                                                                 {formatDate(donation.created_at)}

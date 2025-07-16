@@ -168,7 +168,12 @@ export default function ChildViewPage() {
                                                     <div className="flex items-center gap-4 text-sm text-gray-600">
                                                         <div className="flex items-center gap-1">
                                                             <User className="h-3 w-3" />
-                                                            <span>{donation.donor_name}</span>
+                                                            <span>
+                                                                {donation.donor?.name ||
+                                                                    donation.anonymous_name ||
+                                                                    donation.guest_name ||
+                                                                    'Anonymous'}
+                                                            </span>
                                                             {donation.is_anonymous && (
                                                                 <Badge variant="outline" className="ml-1 text-xs">
                                                                     Anonymous
@@ -179,10 +184,12 @@ export default function ChildViewPage() {
                                                             <Calendar className="h-3 w-3" />
                                                             <span>{formatDate(donation.created_at)}</span>
                                                         </div>
-                                                        {donation.donor_email && (
+                                                        {(donation.donor?.email || donation.anonymous_email || donation.guest_email) && (
                                                             <div className="flex items-center gap-1">
                                                                 <Mail className="h-3 w-3" />
-                                                                <span>{donation.donor_email}</span>
+                                                                <span>
+                                                                    {donation.donor?.email || donation.anonymous_email || donation.guest_email}
+                                                                </span>
                                                             </div>
                                                         )}
                                                     </div>
@@ -248,7 +255,9 @@ export default function ChildViewPage() {
                                                             </Badge>
                                                         </div>
                                                         <div className="text-sm text-gray-600">
-                                                            From {donation.donor_name} on {formatDate(donation.created_at)}
+                                                            From{' '}
+                                                            {donation.donor?.name || donation.anonymous_name || donation.guest_name || 'Anonymous'} on{' '}
+                                                            {formatDate(donation.created_at)}
                                                         </div>
                                                     </div>
                                                     <div className="text-lg font-semibold text-green-600">
@@ -281,7 +290,9 @@ export default function ChildViewPage() {
                                                         <div className="text-sm text-gray-600">{formatDate(donation.created_at)}</div>
                                                     </div>
 
-                                                    <div className="text-sm text-gray-600">From {donation.donor_name}</div>
+                                                    <div className="text-sm text-gray-600">
+                                                        From {donation.donor?.name || donation.anonymous_name || donation.guest_name || 'Anonymous'}
+                                                    </div>
 
                                                     <div className="space-y-2">
                                                         <div className="text-sm font-medium text-purple-600">
