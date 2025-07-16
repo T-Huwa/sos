@@ -248,7 +248,6 @@ const AnonymousDonationForm: React.FC = () => {
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                             disabled={loading}
-                            min="100"
                             required
                             className={getFieldError('amount') ? 'border-red-500 focus:border-red-500' : ''}
                         />

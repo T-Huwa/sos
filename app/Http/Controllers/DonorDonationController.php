@@ -217,15 +217,15 @@ class DonorDonationController extends Controller
         $secretKey = env('PAYCHANGU_SECRET_KEY', 'SEC-TEST-8RrdLH9CnuEnRqaoMVa7c1NiCIsrOds0');
 
         // Use the actual domain from APP_URL or a publicly accessible URL
-        $baseUrl = config('app.url');
+        $baseUrl = "http://localhost:8000"; // config('app.url');
 
         // For development with PayChangu, you need a publicly accessible URL
-        if (str_contains($baseUrl, 'localhost') || str_contains($baseUrl, '127.0.0.1')) {
-            // Replace this with your actual ngrok URL when testing payments
-            // Run: ngrok http 80
-            // Then update this URL with the one ngrok provides
-            $baseUrl = 'https://e16fe5cdd8ad.ngrok-free.app'; // Updated with your ngrok URL
-        }
+        // if (str_contains($baseUrl, 'localhost') || str_contains($baseUrl, '127.0.0.1')) {
+        //     // Replace this with your actual ngrok URL when testing payments
+        //     // Run: ngrok http 8000
+        //     // Then update this URL with the one ngrok provides
+        //     $baseUrl = 'https://e16fe5cdd8ad.ngrok-free.app'; // Updated with your ngrok URL
+        // }
 
         $callbackUrl = $baseUrl . "/donor/donations/callback";
         $returnUrl = $baseUrl . "/donor/donations/return";
