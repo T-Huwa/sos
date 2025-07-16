@@ -10,7 +10,8 @@ class Donation extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'checkout_ref', 'child_id', 'donation_type', 'amount', 'description', 'status', 'receipt_path'
+        'user_id', 'checkout_ref', 'child_id', 'donation_type', 'amount', 'description', 'status', 'receipt_path',
+        'is_anonymous', 'anonymous_name', 'anonymous_email', 'guest_name', 'guest_email'
     ];
 
     public function user()

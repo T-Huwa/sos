@@ -1,81 +1,296 @@
-import React, { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import React, { useState } from 'react';
+import { toast } from 'sonner';
+
+interface DonatedItem {
+    name: string;
+    quantity: number;
+    description: string;
+}
 
 const AnonymousDonationForm: React.FC = () => {
-  const [amount, setAmount] = useState("");
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
+    const [donationType, setDonationType] = useState<'cash' | 'items'>('cash');
+    const [amount, setAmount] = useState('');
+    const [message, setMessage] = useState('');
+    const [loading, setLoading] = useState(false);
 
-  const handleDonate = async () => {
-    if (!amount) {
-      toast.error("Please enter a donation amount.");
-      return;
-    }
+    // Anonymous donor information
+    const [donorName, setDonorName] = useState('');
+    const [donorEmail, setDonorEmail] = useState('');
 
-    setLoading(true);
+    // Item donation fields
+    const [items, setItems] = useState<DonatedItem[]>([{ name: '', quantity: 1, description: '' }]);
 
-    try {
-      const res = await fetch("/anonymous-donation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount, message }),
-      });
+    const addItem = () => {
+        setItems([...items, { name: '', quantity: 1, description: '' }]);
+    };
 
+    const removeItem = (index: number) => {
+        if (items.length > 1) {
+            setItems(items.filter((_, i) => i !== index));
+        }
+    };
 
-      toast.success("Thank you for your anonymous donation!");
+    const updateItem = (index: number, field: keyof DonatedItem, value: string | number) => {
+        const updatedItems = [...items];
+        updatedItems[index] = { ...updatedItems[index], [field]: value };
+        setItems(updatedItems);
+    };
 
-      setAmount("");
-      setMessage("");
-    } catch (error) {
-      toast.error("Donation failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const validateForm = () => {
+        if (!donorName.trim()) {
+            toast.error('Please enter your name.');
+            return false;
+        }
+        if (!donorEmail.trim()) {
+            toast.error('Please enter your email.');
+            return false;
+        }
+        if (!/\S+@\S+\.\S+/.test(donorEmail)) {
+            toast.error('Please enter a valid email address.');
+            return false;
+        }
 
-  return (
-    <Card className="max-w-md mx-auto mt-10 shadow-2xl rounded-2xl">
-      <CardContent className="p-6 space-y-6">
-        <h2 className="text-2xl font-bold text-center">Anonymous Donation</h2>
+        if (donationType === 'cash') {
+            if (!amount || parseFloat(amount) <= 0) {
+                toast.error('Please enter a valid donation amount.');
+                return false;
+            }
+        } else {
+            const validItems = items.filter((item) => item.name.trim() && item.quantity > 0);
+            if (validItems.length === 0) {
+                toast.error('Please add at least one item with a name and quantity.');
+                return false;
+            }
+        }
+        return true;
+    };
 
-        <div className="space-y-2">
-          <Label htmlFor="amount">Amount (MWK)</Label>
-          <Input
-            id="amount"
-            type="number"
-            placeholder="Enter amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            disabled={loading}
-          />
-        </div>
+    const handleDonate = async () => {
+        if (!validateForm()) {
+            return;
+        }
 
-        <div className="space-y-2">
-          <Label htmlFor="message">Optional Message</Label>
-          <Textarea
-            id="message"
-            placeholder="Leave a kind note or intention (optional)"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            disabled={loading}
-          />
-        </div>
+        setLoading(true);
 
-        <Button
-          className="w-full"
-          onClick={handleDonate}
-          disabled={loading || !amount}
-        >
-          {loading ? "Processing..." : "Donate Anonymously"}
-        </Button>
-      </CardContent>
-    </Card>
-  );
+        try {
+            const payload = {
+                donation_type: donationType,
+                anonymous_name: donorName,
+                anonymous_email: donorEmail,
+                message: message || null,
+                ...(donationType === 'cash'
+                    ? { amount: parseFloat(amount) }
+                    : { items: items.filter((item) => item.name.trim() && item.quantity > 0) }),
+            };
+
+            const res = await fetch('/anonymous-donation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.message || 'Donation failed');
+            }
+
+            if (donationType === 'cash' && data.checkout_url) {
+                // Redirect to PayChangu for payment
+                window.location.href = data.checkout_url;
+            } else {
+                toast.success('Thank you for your anonymous donation!');
+                // Reset form
+                setAmount('');
+                setMessage('');
+                setDonorName('');
+                setDonorEmail('');
+                setItems([{ name: '', quantity: 1, description: '' }]);
+            }
+        } catch (error) {
+            console.error('Donation error:', error);
+            toast.error('Donation failed. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <Card className="mx-auto mt-10 max-w-2xl rounded-2xl shadow-2xl">
+            <CardContent className="space-y-6 p-6">
+                <h2 className="text-center text-2xl font-bold">Anonymous Donation</h2>
+
+                {/* Donor Information */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Your Information</h3>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label htmlFor="donorName">Your Name *</Label>
+                            <Input
+                                id="donorName"
+                                placeholder="Enter your name"
+                                value={donorName}
+                                onChange={(e) => setDonorName(e.target.value)}
+                                disabled={loading}
+                                required
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="donorEmail">Your Email *</Label>
+                            <Input
+                                id="donorEmail"
+                                type="email"
+                                placeholder="Enter your email"
+                                value={donorEmail}
+                                onChange={(e) => setDonorEmail(e.target.value)}
+                                disabled={loading}
+                                required
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Donation Type Selection */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Donation Type</h3>
+                    <div className="flex space-x-6">
+                        <label className="flex cursor-pointer items-center space-x-2">
+                            <input
+                                type="radio"
+                                name="donationType"
+                                value="cash"
+                                checked={donationType === 'cash'}
+                                onChange={(e) => setDonationType(e.target.value as 'cash' | 'items')}
+                                disabled={loading}
+                                className="h-4 w-4"
+                            />
+                            <span>Cash Donation</span>
+                        </label>
+                        <label className="flex cursor-pointer items-center space-x-2">
+                            <input
+                                type="radio"
+                                name="donationType"
+                                value="items"
+                                checked={donationType === 'items'}
+                                onChange={(e) => setDonationType(e.target.value as 'cash' | 'items')}
+                                disabled={loading}
+                                className="h-4 w-4"
+                            />
+                            <span>Item Donation</span>
+                        </label>
+                    </div>
+                </div>
+
+                {/* Cash Donation Fields */}
+                {donationType === 'cash' && (
+                    <div className="space-y-2">
+                        <Label htmlFor="amount">Amount (MWK) *</Label>
+                        <Input
+                            id="amount"
+                            type="number"
+                            placeholder="Enter amount"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            disabled={loading}
+                            min="1"
+                            required
+                        />
+                        <p className="text-sm text-gray-600">You will be redirected to PayChangu to complete your payment.</p>
+                    </div>
+                )}
+
+                {/* Item Donation Fields */}
+                {donationType === 'items' && (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <Label>Items to Donate *</Label>
+                            <Button type="button" variant="outline" size="sm" onClick={addItem} disabled={loading}>
+                                Add Item
+                            </Button>
+                        </div>
+                        {items.map((item, index) => (
+                            <div key={index} className="rounded-lg border p-4">
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                                    <div className="space-y-2">
+                                        <Label htmlFor={`item-name-${index}`}>Item Name *</Label>
+                                        <Input
+                                            id={`item-name-${index}`}
+                                            placeholder="e.g., School supplies"
+                                            value={item.name}
+                                            onChange={(e) => updateItem(index, 'name', e.target.value)}
+                                            disabled={loading}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor={`item-quantity-${index}`}>Quantity *</Label>
+                                        <Input
+                                            id={`item-quantity-${index}`}
+                                            type="number"
+                                            placeholder="1"
+                                            value={item.quantity}
+                                            onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                                            disabled={loading}
+                                            min="1"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="flex items-end">
+                                        {items.length > 1 && (
+                                            <Button
+                                                type="button"
+                                                variant="destructive"
+                                                size="sm"
+                                                onClick={() => removeItem(index)}
+                                                disabled={loading}
+                                                className="w-full"
+                                            >
+                                                Remove
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="mt-4 space-y-2">
+                                    <Label htmlFor={`item-description-${index}`}>Description</Label>
+                                    <Textarea
+                                        id={`item-description-${index}`}
+                                        placeholder="Brief description of the item(s)"
+                                        value={item.description}
+                                        onChange={(e) => updateItem(index, 'description', e.target.value)}
+                                        disabled={loading}
+                                        rows={2}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* Optional Message */}
+                <div className="space-y-2">
+                    <Label htmlFor="message">Optional Message</Label>
+                    <Textarea
+                        id="message"
+                        placeholder="Leave a kind note or intention (optional)"
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        disabled={loading}
+                        rows={3}
+                    />
+                </div>
+
+                {/* Submit Button */}
+                <Button className="w-full" onClick={handleDonate} disabled={loading} size="lg">
+                    {loading ? 'Processing...' : donationType === 'cash' ? 'Proceed to Payment' : 'Submit Item Donation'}
+                </Button>
+            </CardContent>
+        </Card>
+    );
 };
 
 export default AnonymousDonationForm;
