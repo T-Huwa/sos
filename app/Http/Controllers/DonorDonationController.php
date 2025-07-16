@@ -223,7 +223,7 @@ class DonorDonationController extends Controller
         //     // Replace this with your actual ngrok URL when testing payments
         //     // Run: ngrok http 80
         //     // Then update this URL with the one ngrok provides
-        //     $baseUrl = 'https://your-ngrok-url.ngrok-free.app'; // Update this with your ngrok URL
+        //     $baseUrl = 'https://e16fe5cdd8ad.ngrok-free.app'; // Updated with your ngrok URL
         // }
 
         $callbackUrl = $baseUrl . "/donor/donations/callback";

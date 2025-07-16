@@ -13,8 +13,11 @@ class Child extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'first_name', 'last_name', 'image', 'date_of_birth',
-        'gender', 'health_status', 'education_level'
+        'first_name', 'last_name', 'name', 'image', 'date_of_birth', 'age',
+        'gender', 'location', 'school', 'grade', 'story', 'photo',
+        'health_status', 'education_level', 'academic_performance', 'last_health_checkup',
+        'favorite_subjects', 'dreams', 'hobbies', 'guardian_name', 'guardian_contact',
+        'medical_conditions'
     ];
 
     public function sponsorships()
