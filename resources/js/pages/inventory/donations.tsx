@@ -217,6 +217,7 @@ export default function InventoryDonationsPage({ donations }: Props) {
 
 function DonationsTable({ donations }: { donations: Donation[] }) {
     const [loadingInventory, setLoadingInventory] = useState<number | null>(null);
+    const [successfullyAdded, setSuccessfullyAdded] = useState<number[]>([]);
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-GB', {
@@ -241,40 +242,110 @@ function DonationsTable({ donations }: { donations: Donation[] }) {
         }
     };
 
-    const handleAddToInventory = async (donationId: number) => {
+    const handleAddToInventory = async (donationId: number, donationItems: any[]) => {
+        // Show confirmation dialog with item details
+        const itemsList = donationItems.map((item) => `• ${item.quantity}× ${item.item_name}`).join('\n');
+        const confirmed = window.confirm(
+            `Are you sure you want to add these items to inventory?\n\n${itemsList}\n\nThis action will move the items from donations to the inventory system.`,
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
         setLoadingInventory(donationId);
+
+        // Show initial loading toast
+        const loadingToast = toast.loading('Adding items to inventory...', {
+            description: 'Please wait while we process the items.',
+        });
+
         try {
             const response = await fetch(`/inventory/donations/${donationId}/add-to-inventory`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
             });
 
             const data = await response.json();
 
+            // Dismiss loading toast
+            toast.dismiss(loadingToast);
+
             if (response.ok) {
+                // Show detailed success feedback
                 if (data.added_count > 0) {
-                    toast.success(`Successfully added ${data.added_count} item type(s) to inventory!`);
-                } else {
-                    toast.info(data.message);
+                    // Add to successfully added list for visual feedback
+                    setSuccessfullyAdded((prev) => [...prev, donationId]);
+
+                    toast.success('Items successfully added to inventory!', {
+                        description: `${data.added_count} item type(s) have been added to the inventory system.`,
+                        duration: 4000,
+                    });
                 }
 
                 if (data.skipped_count > 0) {
-                    toast.info(`${data.skipped_count} item(s) were already in inventory.`);
+                    toast.info('Some items were already in inventory', {
+                        description: `${data.skipped_count} item(s) were already in the inventory system.`,
+                        duration: 3000,
+                    });
                 }
 
-                // Refresh the page to show updated status
+                if (data.added_count === 0 && data.skipped_count === 0) {
+                    toast.info('No items were processed', {
+                        description: data.message || 'No items were added to inventory.',
+                        duration: 3000,
+                    });
+                }
+
+                // Refresh the page to show updated status with a slight delay
                 setTimeout(() => {
                     window.location.reload();
-                }, 1500);
+                }, 2000);
             } else {
-                toast.error(data.message);
+                // Handle different error types
+                if (response.status === 400) {
+                    toast.error('Invalid request', {
+                        description: data.message || 'The donation cannot be added to inventory.',
+                        duration: 4000,
+                    });
+                } else if (response.status === 404) {
+                    toast.error('Donation not found', {
+                        description: 'The specified donation could not be found.',
+                        duration: 4000,
+                    });
+                } else if (response.status >= 500) {
+                    toast.error('Server error', {
+                        description: 'A server error occurred. Please try again later.',
+                        duration: 4000,
+                    });
+                } else {
+                    toast.error('Failed to add to inventory', {
+                        description: data.message || 'An unexpected error occurred.',
+                        duration: 4000,
+                    });
+                }
             }
         } catch (error) {
+            // Dismiss loading toast
+            toast.dismiss(loadingToast);
+
             console.error('Failed to add to inventory:', error);
-            toast.error('Failed to add items to inventory. Please try again.');
+
+            if (error instanceof TypeError && error.message.includes('fetch')) {
+                toast.error('Network error', {
+                    description: 'Please check your internet connection and try again.',
+                    duration: 4000,
+                });
+            } else {
+                toast.error('Unexpected error', {
+                    description: 'An unexpected error occurred. Please try again.',
+                    duration: 4000,
+                });
+            }
         } finally {
             setLoadingInventory(null);
         }
@@ -313,7 +384,7 @@ function DonationsTable({ donations }: { donations: Donation[] }) {
                     </TableHeader>
                     <TableBody>
                         {donations.map((donation) => (
-                            <TableRow key={donation.id}>
+                            <TableRow key={donation.id} className={successfullyAdded.includes(donation.id) ? 'border-green-200 bg-green-50' : ''}>
                                 <TableCell>
                                     <div className="flex items-center gap-2">
                                         <Calendar className="h-4 w-4 text-gray-400" />
@@ -405,16 +476,26 @@ function DonationsTable({ donations }: { donations: Donation[] }) {
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => handleAddToInventory(donation.id)}
+                                                onClick={() => handleAddToInventory(donation.id, donation.items || [])}
                                                 disabled={
                                                     loadingInventory === donation.id || (donation.items || []).every((item: any) => item.in_inventory)
                                                 }
+                                                className={
+                                                    (donation.items || []).every((item: any) => item.in_inventory)
+                                                        ? 'border-green-200 bg-green-50 text-green-700'
+                                                        : ''
+                                                }
                                             >
-                                                {loadingInventory === donation.id
-                                                    ? 'Adding...'
-                                                    : (donation.items || []).every((item: any) => item.in_inventory)
-                                                      ? 'Already in Inventory'
-                                                      : 'Add to Inventory'}
+                                                {loadingInventory === donation.id ? (
+                                                    <>
+                                                        <div className="mr-2 h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+                                                        Adding...
+                                                    </>
+                                                ) : (donation.items || []).every((item: any) => item.in_inventory) ? (
+                                                    '✓ Already in Inventory'
+                                                ) : (
+                                                    `Add ${(donation.items || []).length} Item${(donation.items || []).length !== 1 ? 's' : ''} to Inventory`
+                                                )}
                                             </Button>
                                         )}
                                     </div>

@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { DollarSign, File, Folder, History, LayoutDashboard, MessageCircle, Users, Users2 } from 'lucide-react';
+import { DollarSign, File, Folder, LayoutDashboard, MessageCircle, Users, Users2 } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -71,12 +71,12 @@ const mainNavItems: NavItem[] = [
         icon: DollarSign,
         role: ['donor'],
     },
-    {
-        title: 'History',
-        href: route('donor.history'),
-        icon: History,
-        role: ['donor'],
-    },
+    // {
+    //     title: 'History',
+    //     href: route('donor.history'),
+    //     icon: History,
+    //     role: ['donor'],
+    // },
 
     // sponsor dashboard
     {

@@ -59,14 +59,35 @@ class ChildController extends Controller
 
     public function addDonationToInventory(Request $request, $donationId)
     {
-        $donation = Donation::with('items')->findOrFail($donationId);
-
-        if ($donation->donation_type !== 'goods') {
-            return response()->json(['message' => 'Only item donations can be added to inventory'], 400);
+        try {
+            $donation = Donation::with('items')->findOrFail($donationId);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Donation not found'], 404);
         }
 
+        // Validate donation type
+        if ($donation->donation_type !== 'goods') {
+            return response()->json([
+                'message' => 'Only item donations can be added to inventory',
+                'error_type' => 'invalid_donation_type'
+            ], 400);
+        }
+
+        // Validate donation status
         if ($donation->status !== 'received') {
-            return response()->json(['message' => 'Only received donations can be added to inventory'], 400);
+            return response()->json([
+                'message' => 'Only received donations can be added to inventory',
+                'error_type' => 'invalid_status',
+                'current_status' => $donation->status
+            ], 400);
+        }
+
+        // Check if donation has items
+        if (!$donation->items || $donation->items->count() === 0) {
+            return response()->json([
+                'message' => 'This donation has no items to add to inventory',
+                'error_type' => 'no_items'
+            ], 400);
         }
 
         try {
@@ -74,46 +95,97 @@ class ChildController extends Controller
 
             $addedItems = [];
             $skippedItems = [];
+            $errorItems = [];
 
             foreach ($donation->items as $item) {
-                // Check if this specific donation item already exists in inventory
-                $existingInventory = \App\Models\Inventory::where('item_name', $item->item_name)
-                    ->where('source_donation_id', $donation->id)
-                    ->first();
+                try {
+                    // Check if this specific donation item already exists in inventory
+                    $existingInventory = \App\Models\Inventory::where('item_name', $item->item_name)
+                        ->where('source_donation_id', $donation->id)
+                        ->first();
 
-                if (!$existingInventory) {
-                    \App\Models\Inventory::create([
+                    if (!$existingInventory) {
+                        // Validate item data
+                        if (empty($item->item_name) || $item->quantity <= 0) {
+                            $errorItems[] = $item->item_name ?: 'Unknown item';
+                            continue;
+                        }
+
+                        \App\Models\Inventory::create([
+                            'item_name' => $item->item_name,
+                            'quantity' => $item->quantity,
+                            'category' => $this->categorizeItem($item->item_name),
+                            'source_donation_id' => $donation->id,
+                            'location' => 'warehouse', // Default location
+                        ]);
+
+                        $addedItems[] = [
+                            'name' => $item->item_name,
+                            'quantity' => $item->quantity,
+                            'category' => $this->categorizeItem($item->item_name)
+                        ];
+                    } else {
+                        $skippedItems[] = $item->item_name;
+                    }
+                } catch (\Exception $e) {
+                    $errorItems[] = $item->item_name;
+                    \Log::error('Failed to add item to inventory', [
+                        'item_id' => $item->id,
                         'item_name' => $item->item_name,
-                        'quantity' => $item->quantity,
-                        'category' => $this->categorizeItem($item->item_name),
-                        'source_donation_id' => $donation->id,
-                        'location' => 'warehouse', // Default location
+                        'donation_id' => $donation->id,
+                        'error' => $e->getMessage()
                     ]);
-                    $addedItems[] = $item->item_name . ' (Qty: ' . $item->quantity . ')';
-                } else {
-                    $skippedItems[] = $item->item_name;
                 }
             }
 
             DB::commit();
 
+            // Build detailed response message
             $message = '';
+            $details = [];
+
             if (count($addedItems) > 0) {
-                $message .= 'Successfully added to inventory: ' . implode(', ', $addedItems);
+                $itemsList = array_map(function($item) {
+                    return $item['name'] . ' (Qty: ' . $item['quantity'] . ')';
+                }, $addedItems);
+                $message .= 'Successfully added to inventory: ' . implode(', ', $itemsList);
+                $details['added_items'] = $addedItems;
             }
+
             if (count($skippedItems) > 0) {
                 if ($message) $message .= '. ';
                 $message .= 'Already in inventory: ' . implode(', ', $skippedItems);
+                $details['skipped_items'] = $skippedItems;
+            }
+
+            if (count($errorItems) > 0) {
+                if ($message) $message .= '. ';
+                $message .= 'Failed to process: ' . implode(', ', $errorItems);
+                $details['error_items'] = $errorItems;
             }
 
             return response()->json([
-                'message' => $message ?: 'No items were added to inventory',
+                'message' => $message ?: 'No items were processed',
                 'added_count' => count($addedItems),
-                'skipped_count' => count($skippedItems)
+                'skipped_count' => count($skippedItems),
+                'error_count' => count($errorItems),
+                'details' => $details,
+                'success' => count($addedItems) > 0
             ]);
+
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Failed to add items to inventory: ' . $e->getMessage()], 500);
+
+            \Log::error('Failed to add donation to inventory', [
+                'donation_id' => $donationId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to add items to inventory due to a system error',
+                'error_type' => 'system_error'
+            ], 500);
         }
     }
 

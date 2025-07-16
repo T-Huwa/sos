@@ -90,6 +90,10 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
 
 Route::middleware(['auth'])->prefix('sponsor')->group(function () {
     Route::get('/dashboard', fn () => Inertia::render('sponsor/dashboard'))->name('sponsor.dashboard');
+    Route::get('/children', [App\Http\Controllers\SponsorController::class, 'browseChildren'])->name('sponsor.children');
+    Route::get('/children/{id}', [App\Http\Controllers\SponsorController::class, 'showChild'])->name('sponsor.child');
+    Route::post('/children/{id}/sponsor', [App\Http\Controllers\SponsorController::class, 'sponsorChild'])->name('sponsor.sponsor-child');
+    Route::get('/my-sponsorships', [App\Http\Controllers\SponsorController::class, 'mySponsorship'])->name('sponsor.my-sponsorships');
 });
 
 Route::middleware(['auth'])->prefix('donor')->group(function () {

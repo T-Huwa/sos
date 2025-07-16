@@ -17,8 +17,9 @@ class DonorDonationController extends Controller
     {
         $user = Auth::user();
 
+        // Build query to get all donations by the authenticated user
         $query = Donation::where('user_id', $user->id)
-            ->with(['child', 'donatedItems'])
+            ->with(['child', 'items']) // Load child and donated items relationships
             ->orderBy('created_at', 'desc');
 
         // Apply filters
@@ -35,18 +36,58 @@ class DonorDonationController extends Controller
                 $q->where('description', 'like', '%' . $request->search . '%')
                   ->orWhereHas('child', function ($childQuery) use ($request) {
                       $childQuery->where('name', 'like', '%' . $request->search . '%');
+                  })
+                  ->orWhereHas('items', function ($itemQuery) use ($request) {
+                      $itemQuery->where('item_name', 'like', '%' . $request->search . '%');
                   });
             });
         }
 
+        // Get paginated donations
         $donations = $query->paginate(10);
 
-        // Calculate statistics
+        // Transform the data to match frontend expectations
+        $donations->getCollection()->transform(function ($donation) {
+            return [
+                'id' => $donation->id,
+                'amount' => $donation->amount,
+                'donation_type' => $donation->donation_type,
+                'status' => $donation->status,
+                'description' => $donation->description,
+                'created_at' => $donation->created_at,
+                'child' => $donation->child ? [
+                    'id' => $donation->child->id,
+                    'name' => $donation->child->name,
+                    'age' => $donation->child->age ?? null,
+                ] : null,
+                'donated_items' => $donation->items->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'item_name' => $item->item_name,
+                        'quantity' => $item->quantity,
+                        'estimated_value' => $item->estimated_value,
+                    ];
+                })->toArray(),
+            ];
+        });
+
+        // Calculate comprehensive statistics
+        $totalCashDonated = Donation::where('user_id', $user->id)
+            ->where('status', 'received')
+            ->where('donation_type', 'money')
+            ->sum('amount') ?? 0;
+
+        $totalItemsValue = Donation::where('user_id', $user->id)
+            ->where('status', 'received')
+            ->where('donation_type', 'goods')
+            ->with('items')
+            ->get()
+            ->sum(function ($donation) {
+                return $donation->items->sum('estimated_value') ?? 0;
+            });
+
         $stats = [
-            'total_donated' => Donation::where('user_id', $user->id)
-                ->where('status', 'received')
-                ->where('donation_type', 'money')
-                ->sum('amount'),
+            'total_donated' => $totalCashDonated + $totalItemsValue,
             'total_donations' => Donation::where('user_id', $user->id)->count(),
             'children_helped' => Donation::where('user_id', $user->id)
                 ->whereNotNull('child_id')
@@ -57,7 +98,19 @@ class DonorDonationController extends Controller
                 ->where('donation_type', 'money')
                 ->whereMonth('created_at', now()->month)
                 ->whereYear('created_at', now()->year)
-                ->sum('amount'),
+                ->sum('amount') ?? 0,
+            'general_donations' => Donation::where('user_id', $user->id)
+                ->whereNull('child_id')
+                ->count(),
+            'child_specific_donations' => Donation::where('user_id', $user->id)
+                ->whereNotNull('child_id')
+                ->count(),
+            'cash_donations' => Donation::where('user_id', $user->id)
+                ->where('donation_type', 'money')
+                ->count(),
+            'item_donations' => Donation::where('user_id', $user->id)
+                ->where('donation_type', 'goods')
+                ->count(),
         ];
 
         return response()->json([
@@ -145,7 +198,7 @@ class DonorDonationController extends Controller
                 'donation_id' => $donation->id,
                 'item_name' => $item['name'],
                 'quantity' => $item['quantity'],
-                'estimated_value' => null, // Could be added later by admin
+                'estimated_value' => $item['estimated_value'] ?? null, // Allow estimated value from frontend
             ]);
         }
 

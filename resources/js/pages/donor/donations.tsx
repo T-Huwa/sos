@@ -46,6 +46,10 @@ interface Stats {
     total_donations: number;
     children_helped: number;
     this_month: number;
+    general_donations: number;
+    child_specific_donations: number;
+    cash_donations: number;
+    item_donations: number;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -146,55 +150,106 @@ export default function DonorDonations() {
 
                 {/* Stats Cards */}
                 {stats && (
-                    <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
-                        <Card>
-                            <CardContent className="p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-600">Total Donated</p>
-                                        <p className="text-2xl font-bold text-green-600">MWK {stats.total_donated.toLocaleString()}</p>
+                    <>
+                        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                            <Card>
+                                <CardContent className="p-6">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-600">Total Value Donated</p>
+                                            <p className="text-2xl font-bold text-green-600">MWK {stats.total_donated.toLocaleString()}</p>
+                                            <p className="mt-1 text-xs text-gray-500">Cash + estimated item value</p>
+                                        </div>
+                                        <Gift className="h-8 w-8 text-green-600" />
                                     </div>
-                                    <Gift className="h-8 w-8 text-green-600" />
-                                </div>
-                            </CardContent>
-                        </Card>
+                                </CardContent>
+                            </Card>
 
-                        <Card>
-                            <CardContent className="p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-600">Total Donations</p>
-                                        <p className="text-2xl font-bold text-blue-600">{stats.total_donations}</p>
+                            <Card>
+                                <CardContent className="p-6">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-600">Total Donations</p>
+                                            <p className="text-2xl font-bold text-blue-600">{stats.total_donations}</p>
+                                            <div className="mt-1 text-xs text-gray-500">
+                                                <span>
+                                                    {stats.cash_donations} cash • {stats.item_donations} items
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <Package className="h-8 w-8 text-blue-600" />
                                     </div>
-                                    <Package className="h-8 w-8 text-blue-600" />
-                                </div>
-                            </CardContent>
-                        </Card>
+                                </CardContent>
+                            </Card>
 
-                        <Card>
-                            <CardContent className="p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-600">Children Helped</p>
-                                        <p className="text-2xl font-bold text-purple-600">{stats.children_helped}</p>
+                            <Card>
+                                <CardContent className="p-6">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-600">Children Helped</p>
+                                            <p className="text-2xl font-bold text-purple-600">{stats.children_helped}</p>
+                                            <div className="mt-1 text-xs text-gray-500">
+                                                <span>{stats.child_specific_donations} child-specific donations</span>
+                                            </div>
+                                        </div>
+                                        <User className="h-8 w-8 text-purple-600" />
                                     </div>
-                                    <User className="h-8 w-8 text-purple-600" />
-                                </div>
-                            </CardContent>
-                        </Card>
+                                </CardContent>
+                            </Card>
 
-                        <Card>
-                            <CardContent className="p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-600">This Month</p>
-                                        <p className="text-2xl font-bold text-orange-600">MWK {stats.this_month.toLocaleString()}</p>
+                            <Card>
+                                <CardContent className="p-6">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-600">This Month</p>
+                                            <p className="text-2xl font-bold text-orange-600">MWK {stats.this_month.toLocaleString()}</p>
+                                            <p className="mt-1 text-xs text-gray-500">Cash donations only</p>
+                                        </div>
+                                        <Calendar className="h-8 w-8 text-orange-600" />
                                     </div>
-                                    <Calendar className="h-8 w-8 text-orange-600" />
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Additional Stats Row */}
+                        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+                            <Card>
+                                <CardContent className="p-6">
+                                    <div className="text-center">
+                                        <h3 className="mb-4 text-lg font-semibold text-gray-900">Donation Distribution</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="text-center">
+                                                <p className="text-2xl font-bold text-blue-600">{stats.child_specific_donations}</p>
+                                                <p className="text-sm text-gray-600">Child-Specific</p>
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="text-2xl font-bold text-gray-600">{stats.general_donations}</p>
+                                                <p className="text-sm text-gray-600">General</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardContent className="p-6">
+                                    <div className="text-center">
+                                        <h3 className="mb-4 text-lg font-semibold text-gray-900">Donation Types</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="text-center">
+                                                <p className="text-2xl font-bold text-green-600">{stats.cash_donations}</p>
+                                                <p className="text-sm text-gray-600">Cash</p>
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="text-2xl font-bold text-purple-600">{stats.item_donations}</p>
+                                                <p className="text-sm text-gray-600">Items</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </>
                 )}
 
                 {/* Filters */}
@@ -255,40 +310,107 @@ export default function DonorDonations() {
                         ) : donations && donations.data.length > 0 ? (
                             <div className="space-y-4">
                                 {donations.data.map((donation) => (
-                                    <div key={donation.id} className="flex items-center justify-between rounded-lg border p-4">
-                                        <div className="flex items-center space-x-4">
-                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-                                                {donation.donation_type === 'money' ? (
-                                                    <Gift className="h-5 w-5 text-blue-600" />
-                                                ) : (
-                                                    <Package className="h-5 w-5 text-blue-600" />
-                                                )}
-                                            </div>
-                                            <div>
-                                                <p className="font-medium">{donation.child ? donation.child.name : 'General Donation'}</p>
-                                                <p className="text-sm text-gray-600">
-                                                    {donation.donation_type === 'money' ? 'Cash' : 'Items'} • {formatDate(donation.created_at)}
-                                                </p>
-                                                {donation.description && <p className="mt-1 text-sm text-gray-500">{donation.description}</p>}
-                                                {donation.donated_items && donation.donated_items.length > 0 && (
-                                                    <div className="mt-2">
-                                                        <p className="text-sm font-medium text-gray-700">Items:</p>
-                                                        <ul className="text-sm text-gray-600">
-                                                            {donation.donated_items.map((item, index) => (
-                                                                <li key={index}>
-                                                                    {item.item_name} (Qty: {item.quantity})
-                                                                </li>
-                                                            ))}
-                                                        </ul>
+                                    <div key={donation.id} className="rounded-lg border p-6 transition-shadow hover:shadow-md">
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex items-start space-x-4">
+                                                <div
+                                                    className={`flex h-12 w-12 items-center justify-center rounded-full ${
+                                                        donation.donation_type === 'money' ? 'bg-green-100' : 'bg-purple-100'
+                                                    }`}
+                                                >
+                                                    {donation.donation_type === 'money' ? (
+                                                        <Gift
+                                                            className={`h-6 w-6 ${
+                                                                donation.donation_type === 'money' ? 'text-green-600' : 'text-purple-600'
+                                                            }`}
+                                                        />
+                                                    ) : (
+                                                        <Package className="h-6 w-6 text-purple-600" />
+                                                    )}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="mb-2 flex items-center gap-2">
+                                                        <h3 className="text-lg font-semibold">
+                                                            {donation.child ? `Donation to ${donation.child.name}` : 'General Donation'}
+                                                        </h3>
+                                                        <Badge variant={getStatusBadgeVariant(donation.status)}>
+                                                            {donation.status.charAt(0).toUpperCase() + donation.status.slice(1)}
+                                                        </Badge>
                                                     </div>
+
+                                                    <div className="mb-3 flex items-center gap-4 text-sm text-gray-600">
+                                                        <div className="flex items-center gap-1">
+                                                            <Calendar className="h-4 w-4" />
+                                                            <span>{formatDate(donation.created_at)}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1">
+                                                            {donation.donation_type === 'money' ? (
+                                                                <Gift className="h-4 w-4" />
+                                                            ) : (
+                                                                <Package className="h-4 w-4" />
+                                                            )}
+                                                            <span>{donation.donation_type === 'money' ? 'Cash Donation' : 'Item Donation'}</span>
+                                                        </div>
+                                                        {donation.child && (
+                                                            <div className="flex items-center gap-1">
+                                                                <User className="h-4 w-4" />
+                                                                <span>Child-specific</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {donation.description && (
+                                                        <div className="mb-3 rounded-md bg-gray-50 p-3">
+                                                            <p className="text-sm text-gray-700">
+                                                                <strong>Message:</strong> {donation.description}
+                                                            </p>
+                                                        </div>
+                                                    )}
+
+                                                    {donation.donated_items && donation.donated_items.length > 0 && (
+                                                        <div className="mt-3">
+                                                            <p className="mb-2 text-sm font-medium text-gray-700">
+                                                                Donated Items ({donation.donated_items.length}):
+                                                            </p>
+                                                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                                                {donation.donated_items.map((item, index) => (
+                                                                    <div
+                                                                        key={index}
+                                                                        className="flex items-center justify-between rounded bg-purple-50 p-2"
+                                                                    >
+                                                                        <div className="flex items-center gap-2">
+                                                                            <Package className="h-3 w-3 text-purple-500" />
+                                                                            <span className="text-sm font-medium">{item.item_name}</span>
+                                                                        </div>
+                                                                        <div className="text-sm text-gray-600">
+                                                                            Qty: {item.quantity}
+                                                                            {item.estimated_value && (
+                                                                                <span className="ml-2 text-green-600">
+                                                                                    (MWK {item.estimated_value.toLocaleString()})
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p
+                                                    className={`text-xl font-bold ${
+                                                        donation.donation_type === 'money' ? 'text-green-600' : 'text-purple-600'
+                                                    }`}
+                                                >
+                                                    {formatAmount(donation.amount, donation.donation_type)}
+                                                </p>
+                                                {donation.donation_type === 'goods' && donation.donated_items && (
+                                                    <p className="mt-1 text-sm text-gray-500">
+                                                        {donation.donated_items.length} item type{donation.donated_items.length !== 1 ? 's' : ''}
+                                                    </p>
                                                 )}
                                             </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="font-medium">{formatAmount(donation.amount, donation.donation_type)}</p>
-                                            <Badge variant={getStatusBadgeVariant(donation.status)}>
-                                                {donation.status.charAt(0).toUpperCase() + donation.status.slice(1)}
-                                            </Badge>
                                         </div>
                                     </div>
                                 ))}
