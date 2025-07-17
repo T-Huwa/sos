@@ -47,6 +47,17 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+// Helper function to get the appropriate image source
+const getChildImageSrc = (child: Child) => {
+    if (child.image) {
+        // Use uploaded image
+        return `/storage/${child.image}`;
+    }
+    // Use gender-based default image
+    const defaultImage = child.gender === 'female' ? 'girl.jpg' : 'boy.jpg';
+    return `/storage/children/${defaultImage}`;
+};
+
 export default function DonorChildren({ children }: Props) {
     const getHealthStatusColor = (status: string) => {
         switch (status?.toLowerCase()) {
@@ -81,24 +92,24 @@ export default function DonorChildren({ children }: Props) {
                                 <Card key={child.id} className="transition-shadow hover:shadow-lg">
                                     <CardHeader className="pb-3">
                                         {/* Child Image */}
-                                        {(child.image || child.photo) && (
-                                            <div className="mb-4 h-48 w-full overflow-hidden rounded-lg bg-gray-100">
-                                                <img
-                                                    src={
-                                                        child.image?.startsWith('/storage')
-                                                            ? child.image
-                                                            : child.photo?.startsWith('/storage')
-                                                              ? child.photo
-                                                              : `/storage/children/${child.image || child.photo}`
+                                        <div className="mb-4 h-48 w-full overflow-hidden rounded-lg bg-gray-100">
+                                            <img
+                                                src={getChildImageSrc(child)}
+                                                alt={child.name || `${child.first_name} ${child.last_name}`}
+                                                className="h-full w-full object-cover"
+                                                onError={(e) => {
+                                                    // Create a fallback with initials if even default images fail
+                                                    const target = e.currentTarget;
+                                                    target.style.display = 'none';
+                                                    const parent = target.parentElement;
+                                                    if (parent) {
+                                                        const firstName = child.first_name || child.name?.split(' ')[0] || '';
+                                                        const lastName = child.last_name || child.name?.split(' ')[1] || '';
+                                                        parent.innerHTML = `<div class="flex h-full w-full items-center justify-center bg-blue-100 text-blue-600 text-4xl font-bold">${firstName[0] || '?'}${lastName[0] || ''}</div>`;
                                                     }
-                                                    alt={child.name || `${child.first_name} ${child.last_name}`}
-                                                    className="h-full w-full object-cover"
-                                                    onError={(e) => {
-                                                        e.currentTarget.src = '/placeholder-child.jpg';
-                                                    }}
-                                                />
-                                            </div>
-                                        )}
+                                                }}
+                                            />
+                                        </div>
 
                                         <div className="flex items-center justify-between">
                                             <CardTitle className="text-lg">{child.name || `${child.first_name} ${child.last_name}`}</CardTitle>

@@ -59,6 +59,17 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+// Helper function to get the appropriate image source
+const getChildImageSrc = (child: any) => {
+    if (child.image) {
+        // Use uploaded image
+        return `/storage/${child.image}`;
+    }
+    // Use gender-based default image
+    const defaultImage = child.gender === 'female' ? 'girl.jpg' : 'boy.jpg';
+    return `/storage/children/${defaultImage}`;
+};
+
 export default function DonorChildViewPage() {
     const { child, donations, donors } = usePage().props as any;
 
@@ -228,24 +239,22 @@ export default function DonorChildViewPage() {
                             </CardHeader>
                             <CardContent className="space-y-6">
                                 {/* Child Photo */}
-                                {(child.image || child.photo) && (
-                                    <div className="flex justify-center">
-                                        <img
-                                            src={
-                                                child.image?.startsWith('/storage')
-                                                    ? child.image
-                                                    : child.photo?.startsWith('/storage')
-                                                      ? child.photo
-                                                      : `/storage/children/${child.image || child.photo}`
+                                <div className="flex justify-center">
+                                    <img
+                                        src={getChildImageSrc(child)}
+                                        alt={`${child.first_name} ${child.last_name}`}
+                                        className="h-48 w-48 rounded-full border-4 border-gray-300 object-cover shadow-md"
+                                        onError={(e) => {
+                                            // Create a fallback with initials if even default images fail
+                                            const target = e.currentTarget;
+                                            target.style.display = 'none';
+                                            const parent = target.parentElement;
+                                            if (parent) {
+                                                parent.innerHTML = `<div class="flex h-48 w-48 items-center justify-center rounded-full border-4 border-gray-300 bg-blue-100 text-blue-600 text-4xl font-bold shadow-md">${child.first_name?.[0] || '?'}${child.last_name?.[0] || ''}</div>`;
                                             }
-                                            alt={`${child.first_name} ${child.last_name}`}
-                                            className="h-48 w-48 rounded-full border-4 border-gray-300 object-cover shadow-md"
-                                            onError={(e) => {
-                                                e.currentTarget.src = '/placeholder-child.jpg';
-                                            }}
-                                        />
-                                    </div>
-                                )}
+                                        }}
+                                    />
+                                </div>
 
                                 {/* Child Info */}
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

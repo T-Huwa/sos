@@ -7,7 +7,44 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import { usePage } from '@inertiajs/react';
 import { Calendar, Gift, Mail, Package, User } from 'lucide-react';
-import { useState } from 'react';
+import { memo, useState } from 'react';
+
+// Helper function to get the appropriate image source
+const getChildImageSrc = (child: any) => {
+    if (child.image) {
+        // Use uploaded image
+        return `/storage/${child.image}`;
+    }
+    // Use gender-based default image
+    const defaultImage = child.gender === 'female' ? 'girl.jpg' : 'boy.jpg';
+    return `/storage/children/${defaultImage}`;
+};
+
+// Memoized child profile image component
+const ChildProfileImage = memo(({ child }: { child: any }) => {
+    const imageSrc = getChildImageSrc(child);
+
+    return (
+        <div className="flex justify-center">
+            <img
+                src={imageSrc}
+                alt={`${child.first_name} ${child.last_name}`}
+                className="h-48 w-48 rounded-full border-4 border-gray-300 object-cover shadow-md"
+                onError={(e) => {
+                    // Create a fallback with initials if even default images fail
+                    const target = e.currentTarget;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                        parent.innerHTML = `<div class="flex h-48 w-48 items-center justify-center rounded-full border-4 border-gray-300 bg-blue-100 text-blue-600 text-4xl font-bold shadow-md">${child.first_name?.[0] || '?'}${child.last_name?.[0] || ''}</div>`;
+                    }
+                }}
+            />
+        </div>
+    );
+});
+
+ChildProfileImage.displayName = 'ChildProfileImage';
 
 export default function ChildViewPage() {
     const { child, donations, donors } = usePage().props as any;
@@ -69,24 +106,7 @@ export default function ChildViewPage() {
         <AppLayout>
             <div className="mx-auto max-w-4xl space-y-6 rounded-lg bg-white p-6 shadow-md">
                 {/* 🖼️ Child Photo */}
-                {(child.image || child.photo) && (
-                    <div className="flex justify-center">
-                        <img
-                            src={
-                                child.image?.startsWith('/storage')
-                                    ? child.image
-                                    : child.photo?.startsWith('/storage')
-                                      ? child.photo
-                                      : `/storage/children/${child.image || child.photo}`
-                            }
-                            alt={`${child.first_name} ${child.last_name}`}
-                            className="h-48 w-48 rounded-full border-4 border-gray-300 object-cover shadow-md"
-                            onError={(e) => {
-                                e.currentTarget.src = '/placeholder-child.jpg';
-                            }}
-                        />
-                    </div>
-                )}
+                <ChildProfileImage child={child} />
                 {/* 🧾 Header & Actions */}
                 <div className="flex items-center justify-between">
                     <h1 className="text-3xl font-bold text-gray-800">Child Profile</h1>
