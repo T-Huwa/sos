@@ -5,6 +5,44 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { Link, usePage } from '@inertiajs/react';
+import { memo } from 'react';
+
+// Helper function to get the appropriate image source
+const getChildImageSrc = (child: any) => {
+    if (child.image) {
+        // Use uploaded image
+        return `/storage/${child.image}`;
+    }
+    // Use gender-based default image
+    const defaultImage = child.gender === 'female' ? 'girl.jpg' : 'boy.jpg';
+    return `/storage/children/${defaultImage}`;
+};
+
+// Memoized child image component to prevent unnecessary re-renders
+const ChildImage = memo(({ child }: { child: any }) => {
+    const imageSrc = getChildImageSrc(child);
+
+    return (
+        <div className="h-12 w-12 overflow-hidden rounded-full bg-gray-100">
+            <img
+                src={imageSrc}
+                alt={`${child.first_name} ${child.last_name}`}
+                className="h-full w-full object-cover"
+                onError={(e) => {
+                    // Fallback to initials if even default images fail
+                    const target = e.currentTarget;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                        parent.innerHTML = `<div class="flex h-full w-full items-center justify-center bg-blue-100 text-blue-600 text-xs font-medium">${child.first_name?.[0] || '?'}${child.last_name?.[0] || ''}</div>`;
+                    }
+                }}
+            />
+        </div>
+    );
+});
+
+ChildImage.displayName = 'ChildImage';
 
 export default function ChildrenPage() {
     const { children } = usePage().props as { children: any[] };
@@ -38,28 +76,7 @@ export default function ChildrenPage() {
                                 children?.map((child) => (
                                     <TableRow key={child.id}>
                                         <TableCell>
-                                            {child.image || child.photo ? (
-                                                <div className="h-12 w-12 overflow-hidden rounded-full bg-gray-100">
-                                                    <img
-                                                        src={
-                                                            child.image?.startsWith('/storage')
-                                                                ? child.image
-                                                                : child.photo?.startsWith('/storage')
-                                                                  ? child.photo
-                                                                  : `/storage/children/${child.image || child.photo}`
-                                                        }
-                                                        alt={`${child.first_name} ${child.last_name}`}
-                                                        className="h-full w-full object-cover"
-                                                        onError={(e) => {
-                                                            e.currentTarget.src = '/placeholder-child.jpg';
-                                                        }}
-                                                    />
-                                                </div>
-                                            ) : (
-                                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200">
-                                                    <span className="text-xs text-gray-500">No Photo</span>
-                                                </div>
-                                            )}
+                                            <ChildImage child={child} />
                                         </TableCell>
                                         <TableCell>
                                             {child.first_name} {child.last_name}
