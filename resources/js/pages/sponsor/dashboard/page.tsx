@@ -36,8 +36,8 @@ export default function DonorDashboard() {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
-                    <Card>
+                <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+                    {/* <Card>
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -47,7 +47,7 @@ export default function DonorDashboard() {
                                 <Gift className="h-8 w-8 text-green-600" />
                             </div>
                         </CardContent>
-                    </Card>
+                    </Card> */}
 
                     <Card>
                         <CardContent className="p-6">
