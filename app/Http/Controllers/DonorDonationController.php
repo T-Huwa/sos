@@ -162,7 +162,7 @@ class DonorDonationController extends Controller
             'donation_type' => 'money',
             'amount' => $validated['amount'],
             'description' => $validated['message'],
-            'status' => 'pending',
+            'status' => 'received',
             'checkout_ref' => 'donor-' . time() . '-' . Str::random(8), // More unique reference
         ]);
 

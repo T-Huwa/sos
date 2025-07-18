@@ -152,7 +152,7 @@ export default function DonorDonations() {
                 {stats && (
                     <>
                         <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                            <Card>
+                            {/*<Card>
                                 <CardContent className="p-6">
                                     <div className="flex items-center justify-between">
                                         <div>
@@ -163,7 +163,7 @@ export default function DonorDonations() {
                                         <Gift className="h-8 w-8 text-green-600" />
                                     </div>
                                 </CardContent>
-                            </Card>
+                            </Card> */}
 
                             <Card>
                                 <CardContent className="p-6">

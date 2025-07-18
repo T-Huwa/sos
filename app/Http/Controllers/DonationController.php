@@ -30,7 +30,7 @@ class DonationController extends Controller
             'donation_type' => $data['donation_type'],
             'guest_name' => $data['guest_name'] ?? null,
             'guest_email' => $data['guest_email'] ?? null,
-            'status' => 'pending',
+            'status' => 'received',
             'checkout_ref' => Str::uuid(),
         ]);
 
