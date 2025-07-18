@@ -97,12 +97,12 @@ const mainNavItems: NavItem[] = [
         icon: DollarSign,
         role: ['sponsor'],
     },
-    {
-        title: 'Communication',
-        href: route('donor.history'),
-        icon: MessageCircle,
-        role: ['sponsor'],
-    },
+    // {
+    //     title: 'Communication',
+    //     href: route('donor.history'),
+    //     icon: MessageCircle,
+    //     role: ['sponsor'],
+    // },
 
     /*
     <TabsList>
