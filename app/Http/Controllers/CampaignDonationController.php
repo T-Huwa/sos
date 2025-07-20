@@ -119,8 +119,16 @@ class CampaignDonationController extends Controller
 
         DB::commit();
 
-        // Redirect directly to the PayChangu form
-        return redirect($checkoutUrl);
+        // For Inertia requests, redirect to the checkout URL
+        if (request()->header('X-Inertia')) {
+            return redirect($checkoutUrl);
+        }
+
+        return response()->json([
+            'success' => true,
+            'checkout_url' => $checkoutUrl,
+            'donation_id' => $donation->id,
+        ]);
     }
 
     private function handleItemDonation(array $validated, DonationCampaign $campaign)
@@ -177,8 +185,16 @@ class CampaignDonationController extends Controller
 
         DB::commit();
 
-        // Redirect directly to the PayChangu form
-        return redirect($checkoutUrl);
+        // For Inertia requests, redirect to the checkout URL
+        if (request()->header('X-Inertia')) {
+            return redirect($checkoutUrl);
+        }
+
+        return response()->json([
+            'success' => true,
+            'checkout_url' => $checkoutUrl,
+            'donation_id' => $donation->id,
+        ]);
     }
 
     private function handleAnonymousItemDonation(array $validated, DonationCampaign $campaign)

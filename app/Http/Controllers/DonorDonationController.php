@@ -113,9 +113,26 @@ class DonorDonationController extends Controller
                 ->count(),
         ];
 
+        // Get active campaigns for the dashboard
+        $campaigns = \App\Models\DonationCampaign::with(['images'])
+            ->latest()
+            ->take(3)
+            ->get()
+            ->map(function ($campaign) {
+                return [
+                    'id' => $campaign->id,
+                    'message' => $campaign->message,
+                    'created_at' => $campaign->created_at->format('M d, Y'),
+                    'created_by' => $campaign->creator->name,
+                    'first_image' => $campaign->images->first()?->image_url,
+                    'images_count' => $campaign->images->count(),
+                ];
+            });
+
         return response()->json([
             'donations' => $donations,
             'stats' => $stats,
+            'campaigns' => $campaigns,
         ]);
     }
 

@@ -108,7 +108,26 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
 });
 
 Route::middleware(['auth'])->prefix('sponsor')->group(function () {
-    Route::get('/dashboard', fn () => Inertia::render('sponsor/dashboard'))->name('sponsor.dashboard');
+    Route::get('/dashboard', function () {
+        $campaigns = \App\Models\DonationCampaign::with(['images'])
+            ->latest()
+            ->take(3)
+            ->get()
+            ->map(function ($campaign) {
+                return [
+                    'id' => $campaign->id,
+                    'message' => $campaign->message,
+                    'created_at' => $campaign->created_at->format('M d, Y'),
+                    'created_by' => $campaign->creator->name,
+                    'first_image' => $campaign->images->first()?->image_url,
+                    'images_count' => $campaign->images->count(),
+                ];
+            });
+
+        return Inertia::render('sponsor/dashboard', [
+            'campaigns' => $campaigns,
+        ]);
+    })->name('sponsor.dashboard');
     Route::get('/children', [App\Http\Controllers\SponsorController::class, 'browseChildren'])->name('sponsor.children');
     Route::get('/children/{id}', [App\Http\Controllers\SponsorController::class, 'showChild'])->name('sponsor.child');
     Route::post('/children/{id}/sponsor', [App\Http\Controllers\SponsorController::class, 'sponsorChild'])->name('sponsor.sponsor-child');
@@ -200,6 +219,27 @@ Route::post('/donations/webhook', [DonationController::class, 'handleWebhook']);
 // Campaign donation routes (public)
 Route::get('/campaigns/{campaign}/donate', [CampaignDonationController::class, 'show'])->name('campaigns.donate');
 Route::post('/campaigns/{campaign}/donate/anonymous', [CampaignDonationController::class, 'storeAnonymous'])->name('campaigns.donate.anonymous');
+
+// Authenticated campaign donation route
+Route::get('/campaigns/{campaign}/donate-authenticated', function (\App\Models\DonationCampaign $campaign) {
+    $campaign->load(['creator', 'images']);
+
+    return Inertia::render('campaigns/donate-authenticated', [
+        'campaign' => [
+            'id' => $campaign->id,
+            'message' => $campaign->message,
+            'created_at' => $campaign->created_at->format('F d, Y'),
+            'created_by' => $campaign->creator->name,
+            'images' => $campaign->images->map(function ($image) {
+                return [
+                    'id' => $image->id,
+                    'url' => $image->image_url,
+                    'original_name' => $image->original_name,
+                ];
+            }),
+        ],
+    ]);
+})->middleware('auth')->name('campaigns.donate.authenticated');
 
 // Campaign donation routes (authenticated)
 Route::middleware(['auth'])->group(function () {

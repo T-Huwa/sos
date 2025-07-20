@@ -4,9 +4,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import PublicLayout from '@/layouts/public-layout';
-import { Head, useForm, usePage } from '@inertiajs/react';
-import { DollarSign, Gift, Heart, Plus, X } from 'lucide-react';
+import AppLayout from '@/layouts/app-layout';
+import { type BreadcrumbItem } from '@/types';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { ArrowLeft, DollarSign, Gift, Heart, Plus, User, X } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -30,7 +31,7 @@ interface Props {
 
 interface AuthProps {
     auth: {
-        user?: {
+        user: {
             id: number;
             name: string;
             email: string;
@@ -43,8 +44,6 @@ interface CashFormData {
     donation_type: 'cash';
     amount: string;
     message: string;
-    anonymous_name?: string;
-    anonymous_email?: string;
     [key: string]: any;
 }
 
@@ -56,14 +55,21 @@ interface ItemFormData {
         quantity: number;
         description: string;
     }>;
-    anonymous_name?: string;
-    anonymous_email?: string;
     [key: string]: any;
 }
 
-// No breadcrumbs needed for public layout
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Dashboard',
+        href: '/dashboard',
+    },
+    {
+        title: 'Donate to Campaign',
+        href: '#',
+    },
+];
 
-export default function DonateToCampaignPage({ campaign }: Props) {
+export default function AuthenticatedDonateToCampaignPage({ campaign }: Props) {
     const { auth } = usePage<AuthProps>().props;
     const [activeTab, setActiveTab] = useState('cash');
     const [items, setItems] = useState([{ name: '', quantity: 1, description: '' }]);
@@ -78,8 +84,6 @@ export default function DonateToCampaignPage({ campaign }: Props) {
         donation_type: 'cash',
         amount: '',
         message: '',
-        anonymous_name: '',
-        anonymous_email: '',
     });
 
     const {
@@ -87,13 +91,10 @@ export default function DonateToCampaignPage({ campaign }: Props) {
         setData: setItemData,
         post: postItem,
         processing: processingItem,
-        errors: itemErrors,
     } = useForm<ItemFormData>({
         donation_type: 'items',
         message: '',
         items: [{ name: '', quantity: 1, description: '' }],
-        anonymous_name: '',
-        anonymous_email: '',
     });
 
     const addItem = () => {
@@ -118,9 +119,7 @@ export default function DonateToCampaignPage({ campaign }: Props) {
     const handleCashSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        const route = auth.user ? `/campaigns/${campaign.id}/donate` : `/campaigns/${campaign.id}/donate/anonymous`;
-
-        postCash(route, {
+        postCash(`/campaigns/${campaign.id}/donate`, {
             onSuccess: () => {
                 toast.success('Redirecting to payment...');
             },
@@ -133,9 +132,7 @@ export default function DonateToCampaignPage({ campaign }: Props) {
     const handleItemSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        const route = auth.user ? `/campaigns/${campaign.id}/donate` : `/campaigns/${campaign.id}/donate/anonymous`;
-
-        postItem(route, {
+        postItem(`/campaigns/${campaign.id}/donate`, {
             onSuccess: () => {
                 toast.success('Item donation submitted successfully!');
                 // Reset form
@@ -144,8 +141,6 @@ export default function DonateToCampaignPage({ campaign }: Props) {
                     donation_type: 'items',
                     message: '',
                     items: [{ name: '', quantity: 1, description: '' }],
-                    anonymous_name: '',
-                    anonymous_email: '',
                 });
             },
             onError: () => {
@@ -155,15 +150,42 @@ export default function DonateToCampaignPage({ campaign }: Props) {
     };
 
     return (
-        <PublicLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Donate to Campaign`} />
             <div className="container mx-auto px-4 py-8">
                 <div className="mb-8 flex items-center gap-4">
+                    <Link href="/dashboard">
+                        <Button variant="outline" size="sm">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back to Dashboard
+                        </Button>
+                    </Link>
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">Support This Campaign</h1>
                         <p className="text-gray-600">Make a difference with your donation</p>
                     </div>
                 </div>
+
+                {/* User Info Card */}
+                <Card className="mb-6">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <User className="h-5 w-5 text-blue-500" />
+                            Donating as
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex items-center gap-4">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-600">
+                                {auth.user.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <p className="font-medium text-gray-900">{auth.user.name}</p>
+                                <p className="text-sm text-gray-600">{auth.user.email}</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
 
                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                     {/* Campaign Info */}
@@ -224,33 +246,6 @@ export default function DonateToCampaignPage({ campaign }: Props) {
 
                                     <TabsContent value="cash">
                                         <form onSubmit={handleCashSubmit} className="space-y-4">
-                                            {!auth.user && (
-                                                <div className="space-y-4 rounded-lg bg-blue-50 p-4">
-                                                    <h4 className="font-medium text-blue-900">Your Information</h4>
-                                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                                        <div>
-                                                            <Label htmlFor="anonymous_name">Full Name *</Label>
-                                                            <Input
-                                                                id="anonymous_name"
-                                                                value={cashData.anonymous_name}
-                                                                onChange={(e) => setCashData('anonymous_name', e.target.value)}
-                                                                required
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <Label htmlFor="anonymous_email">Email *</Label>
-                                                            <Input
-                                                                id="anonymous_email"
-                                                                type="email"
-                                                                value={cashData.anonymous_email}
-                                                                onChange={(e) => setCashData('anonymous_email', e.target.value)}
-                                                                required
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-
                                             <div>
                                                 <Label htmlFor="amount">Donation Amount (MWK) *</Label>
                                                 <Input
@@ -284,33 +279,6 @@ export default function DonateToCampaignPage({ campaign }: Props) {
 
                                     <TabsContent value="items">
                                         <form onSubmit={handleItemSubmit} className="space-y-4">
-                                            {!auth.user && (
-                                                <div className="space-y-4 rounded-lg bg-blue-50 p-4">
-                                                    <h4 className="font-medium text-blue-900">Your Information</h4>
-                                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                                        <div>
-                                                            <Label htmlFor="item_anonymous_name">Full Name *</Label>
-                                                            <Input
-                                                                id="item_anonymous_name"
-                                                                value={itemData.anonymous_name}
-                                                                onChange={(e) => setItemData('anonymous_name', e.target.value)}
-                                                                required
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <Label htmlFor="item_anonymous_email">Email *</Label>
-                                                            <Input
-                                                                id="item_anonymous_email"
-                                                                type="email"
-                                                                value={itemData.anonymous_email}
-                                                                onChange={(e) => setItemData('anonymous_email', e.target.value)}
-                                                                required
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-
                                             <div>
                                                 <Label>Items to Donate *</Label>
                                                 <div className="space-y-3">
@@ -376,6 +344,6 @@ export default function DonateToCampaignPage({ campaign }: Props) {
                     </div>
                 </div>
             </div>
-        </PublicLayout>
+        </AppLayout>
     );
 }

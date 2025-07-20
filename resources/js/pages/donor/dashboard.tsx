@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { Gift, Loader2, Package, TrendingUp, Users } from 'lucide-react';
+import { Gift, Heart, Loader2, Package, TrendingUp, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface DonatedItem {
@@ -37,9 +37,19 @@ interface Stats {
     this_month: number;
 }
 
+interface Campaign {
+    id: number;
+    message: string;
+    created_at: string;
+    created_by: string;
+    first_image?: string;
+    images_count: number;
+}
+
 interface DashboardData {
     stats: Stats;
     recent_donations: Donation[];
+    campaigns: Campaign[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -71,6 +81,7 @@ export default function DonorDashboard() {
                 setDashboardData({
                     stats: data.stats,
                     recent_donations: data.donations.data.slice(0, 5), // Get first 5 for recent donations
+                    campaigns: data.campaigns || [],
                 });
             }
         } catch (error) {
@@ -284,6 +295,45 @@ export default function DonorDashboard() {
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* Active Campaigns Section */}
+                {dashboardData && dashboardData.campaigns.length > 0 && (
+                    <Card className="mt-6">
+                        <CardHeader>
+                            <CardTitle>Active Campaigns</CardTitle>
+                            <CardDescription>Support ongoing campaigns and make a direct impact</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid gap-4 md:grid-cols-3">
+                                {dashboardData.campaigns.map((campaign) => (
+                                    <div key={campaign.id} className="rounded-lg border p-4 transition-shadow hover:shadow-md">
+                                        {campaign.first_image && (
+                                            <div className="mb-3 h-32 overflow-hidden rounded">
+                                                <img src={campaign.first_image} alt="Campaign" className="h-full w-full object-cover" />
+                                            </div>
+                                        )}
+                                        <div className="mb-2 flex items-center justify-between">
+                                            <Badge variant="secondary" className="text-xs">
+                                                {campaign.images_count} image{campaign.images_count !== 1 ? 's' : ''}
+                                            </Badge>
+                                            <span className="text-xs text-gray-500">{campaign.created_at}</span>
+                                        </div>
+                                        <h4 className="mb-2 font-medium text-gray-900">{campaign.created_by}'s Campaign</h4>
+                                        <p className="mb-3 text-sm leading-relaxed text-gray-600">
+                                            {campaign.message.length > 80 ? campaign.message.substring(0, 80) + '...' : campaign.message}
+                                        </p>
+                                        <Link href={`/campaigns/${campaign.id}/donate-authenticated`}>
+                                            <Button size="sm" className="w-full bg-green-600 hover:bg-green-700">
+                                                <Heart className="mr-2 h-4 w-4" />
+                                                Donate Now
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
         </AppLayout>
     );
