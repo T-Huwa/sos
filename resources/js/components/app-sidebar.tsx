@@ -45,6 +45,12 @@ const mainNavItems: NavItem[] = [
         icon: DollarSign,
         role: ['inventory_manager'],
     },
+    {
+        title: 'Campaigns',
+        href: route('inventory.campaigns.index'),
+        icon: MessageCircle,
+        role: ['inventory_manager'],
+    },
     // {
     //     title: 'Reports',
     //     href: route('inventory.reports'),

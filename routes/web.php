@@ -8,6 +8,7 @@ use App\Models\Child;
 
 use App\Http\Controllers\{
     DonationController,
+    DonationCampaignController,
     InventoryController,
     DistributionController,
     ChildController,
@@ -156,6 +157,12 @@ Route::middleware(['auth'])->prefix('inventory')->group(function () {
     Route::post('/donations/{donation}/add-to-inventory', [ChildController::class, 'addDonationToInventory'])->name('inventory.donations.add-to-inventory');
     Route::get('/inventory', [ChildController::class, 'getInventory'])->name('inventory.inventory');
     Route::get('/reports', fn () => Inertia::render('inventory/reports'))->name('inventory.reports');
+
+    // Campaign routes
+    Route::get('/campaigns', [DonationCampaignController::class, 'index'])->name('inventory.campaigns.index');
+    Route::get('/campaigns/create', [DonationCampaignController::class, 'create'])->name('inventory.campaigns.create');
+    Route::post('/campaigns', [DonationCampaignController::class, 'store'])->name('inventory.campaigns.store');
+    Route::get('/campaigns/{campaign}', [DonationCampaignController::class, 'show'])->name('inventory.campaigns.show');
 });
 
 Route::get('/donations/{ref}/success', function ($ref) {
