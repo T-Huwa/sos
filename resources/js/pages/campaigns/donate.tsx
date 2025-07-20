@@ -216,7 +216,15 @@ export default function DonateToCampaignPage({ campaign }: Props) {
                 return;
             }
 
-            toast.success('Item donation submitted successfully!');
+            // Show detailed success message for anonymous users
+            if (auth.user) {
+                toast.success('Item donation submitted successfully!');
+            } else {
+                toast.success(
+                    'Thank you for your generous donation! Your items have been submitted successfully. We will contact you at the provided email address for coordination.',
+                );
+            }
+
             // Reset form
             setItems([{ name: '', quantity: 1, description: '' }]);
             setAmount('');
@@ -287,7 +295,10 @@ export default function DonateToCampaignPage({ campaign }: Props) {
                         <Card>
                             <CardHeader>
                                 <CardTitle>Make Your Donation</CardTitle>
-                                <CardDescription>Choose how you'd like to support this campaign</CardDescription>
+                                <CardDescription>
+                                    Choose how you'd like to support this campaign. Note that you are donating anonymously. We only require your name
+                                    or email so that we can email your receipt
+                                </CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <Tabs value={activeTab} onValueChange={setActiveTab}>
