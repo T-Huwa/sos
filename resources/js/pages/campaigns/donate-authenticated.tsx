@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowLeft, DollarSign, Gift, Heart, Plus, User, X } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -74,79 +74,147 @@ export default function AuthenticatedDonateToCampaignPage({ campaign }: Props) {
     const [activeTab, setActiveTab] = useState('cash');
     const [items, setItems] = useState([{ name: '', quantity: 1, description: '' }]);
 
-    const {
-        data: cashData,
-        setData: setCashData,
-        post: postCash,
-        processing: processingCash,
-        errors: cashErrors,
-    } = useForm<CashFormData>({
-        donation_type: 'cash',
-        amount: '',
-        message: '',
-    });
+    const [loading, setLoading] = useState(false);
 
-    const {
-        data: itemData,
-        setData: setItemData,
-        post: postItem,
-        processing: processingItem,
-    } = useForm<ItemFormData>({
-        donation_type: 'items',
-        message: '',
-        items: [{ name: '', quantity: 1, description: '' }],
-    });
+    // Cash donation state
+    const [amount, setAmount] = useState('');
+    const [cashMessage, setCashMessage] = useState('');
+
+    // Item donation state
+    const [itemMessage, setItemMessage] = useState('');
 
     const addItem = () => {
         const newItems = [...items, { name: '', quantity: 1, description: '' }];
         setItems(newItems);
-        setItemData('items', newItems);
     };
 
     const removeItem = (index: number) => {
         const newItems = items.filter((_, i) => i !== index);
         setItems(newItems);
-        setItemData('items', newItems);
     };
 
     const updateItem = (index: number, field: string, value: string | number) => {
         const newItems = [...items];
         newItems[index] = { ...newItems[index], [field]: value };
         setItems(newItems);
-        setItemData('items', newItems);
     };
 
-    const handleCashSubmit = (e: React.FormEvent) => {
+    const handleCashSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoading(true);
 
-        postCash(`/campaigns/${campaign.id}/donate`, {
-            onSuccess: () => {
-                toast.success('Redirecting to payment...');
-            },
-            onError: () => {
-                toast.error('Failed to submit donation. Please try again.');
-            },
-        });
+        try {
+            const payload = {
+                donation_type: 'cash',
+                amount: parseFloat(amount),
+                message: cashMessage || null,
+            };
+
+            // Get CSRF token from meta tag
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            const response = await fetch(`/campaigns/${campaign.id}/donate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': csrfToken || '',
+                },
+                body: JSON.stringify(payload),
+            });
+
+            // Check if response is JSON or text (URL)
+            const contentType = response.headers.get('content-type');
+            let data;
+
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                // Response is likely a URL string
+                const url = await response.text();
+                data = { checkout_url: url };
+            }
+
+            if (!response.ok) {
+                // Handle validation errors
+                if (response.status === 422 && data.errors) {
+                    const errorMessages = Object.values(data.errors).flat();
+                    errorMessages.forEach((error: any) => {
+                        toast.error(error);
+                    });
+                } else {
+                    toast.error(data.message || 'Donation failed. Please try again.');
+                }
+                return;
+            }
+
+            if (data.checkout_url) {
+                toast.success('Payment form generated! Redirecting to PayChangu...');
+                setTimeout(() => {
+                    window.location.href = data.checkout_url;
+                }, 1000);
+            } else {
+                toast.success('Donation submitted successfully!');
+            }
+        } catch (error) {
+            console.error('Donation error:', error);
+            toast.error('Failed to submit donation. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleItemSubmit = (e: React.FormEvent) => {
+    const handleItemSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoading(true);
 
-        postItem(`/campaigns/${campaign.id}/donate`, {
-            onSuccess: () => {
-                toast.success('Item donation submitted successfully!');
-                // Reset form
-                setItems([{ name: '', quantity: 1, description: '' }]);
-                setItemData({
-                    donation_type: 'items',
-                    message: '',
-                    items: [{ name: '', quantity: 1, description: '' }],
-                });
-            },
-            onError: () => {
-                toast.error('Failed to submit donation. Please try again.');
-            },
-        });
+        try {
+            const payload = {
+                donation_type: 'items',
+                message: itemMessage || null,
+                items: items.filter((item) => item.name.trim() && item.quantity > 0),
+            };
+
+            // Get CSRF token from meta tag
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            const response = await fetch(`/campaigns/${campaign.id}/donate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': csrfToken || '',
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                // Handle validation errors
+                if (response.status === 422 && data.errors) {
+                    const errorMessages = Object.values(data.errors).flat();
+                    errorMessages.forEach((error: any) => {
+                        toast.error(error);
+                    });
+                } else {
+                    toast.error(data.message || 'Donation failed. Please try again.');
+                }
+                return;
+            }
+
+            toast.success('Item donation submitted successfully!');
+            // Reset form
+            setItems([{ name: '', quantity: 1, description: '' }]);
+            setAmount('');
+            setCashMessage('');
+            setItemMessage('');
+        } catch (error) {
+            console.error('Donation error:', error);
+            toast.error('Failed to submit donation. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -252,27 +320,26 @@ export default function AuthenticatedDonateToCampaignPage({ campaign }: Props) {
                                                     id="amount"
                                                     type="number"
                                                     min="100"
-                                                    value={cashData.amount}
-                                                    onChange={(e) => setCashData('amount', e.target.value)}
+                                                    value={amount}
+                                                    onChange={(e) => setAmount(e.target.value)}
                                                     placeholder="Enter amount in MWK"
                                                     required
                                                 />
-                                                {cashErrors.amount && <p className="text-sm text-red-600">{cashErrors.amount}</p>}
                                             </div>
 
                                             <div>
                                                 <Label htmlFor="cash_message">Message (Optional)</Label>
                                                 <Textarea
                                                     id="cash_message"
-                                                    value={cashData.message}
-                                                    onChange={(e) => setCashData('message', e.target.value)}
+                                                    value={cashMessage}
+                                                    onChange={(e) => setCashMessage(e.target.value)}
                                                     placeholder="Add a personal message with your donation..."
                                                     rows={3}
                                                 />
                                             </div>
 
-                                            <Button type="submit" disabled={processingCash} className="w-full">
-                                                {processingCash ? 'Processing...' : 'Donate Now'}
+                                            <Button type="submit" disabled={loading} className="w-full">
+                                                {loading ? 'Processing...' : 'Donate Now'}
                                             </Button>
                                         </form>
                                     </TabsContent>
@@ -326,15 +393,15 @@ export default function AuthenticatedDonateToCampaignPage({ campaign }: Props) {
                                                 <Label htmlFor="item_message">Message (Optional)</Label>
                                                 <Textarea
                                                     id="item_message"
-                                                    value={itemData.message}
-                                                    onChange={(e) => setItemData('message', e.target.value)}
+                                                    value={itemMessage}
+                                                    onChange={(e) => setItemMessage(e.target.value)}
                                                     placeholder="Add a personal message with your donation..."
                                                     rows={3}
                                                 />
                                             </div>
 
-                                            <Button type="submit" disabled={processingItem} className="w-full">
-                                                {processingItem ? 'Submitting...' : 'Submit Item Donation'}
+                                            <Button type="submit" disabled={loading} className="w-full">
+                                                {loading ? 'Submitting...' : 'Submit Item Donation'}
                                             </Button>
                                         </form>
                                     </TabsContent>

@@ -119,11 +119,6 @@ class CampaignDonationController extends Controller
 
         DB::commit();
 
-        // For Inertia requests, redirect to the checkout URL
-        if (request()->header('X-Inertia')) {
-            return redirect($checkoutUrl);
-        }
-
         return response()->json([
             'success' => true,
             'checkout_url' => $checkoutUrl,
@@ -184,11 +179,6 @@ class CampaignDonationController extends Controller
         $checkoutUrl = $this->generatePayChanguCheckoutUrl($donation);
 
         DB::commit();
-
-        // For Inertia requests, redirect to the checkout URL
-        if (request()->header('X-Inertia')) {
-            return redirect($checkoutUrl);
-        }
 
         return response()->json([
             'success' => true,
