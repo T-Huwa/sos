@@ -159,7 +159,7 @@ export default function SponsorChildren({ children, mySponsorship, filters }: Pr
                 )}
 
                 {/* Filters */}
-                <Card className="mb-8">
+                {/* <Card className="mb-8">
                     <CardHeader>
                         <CardTitle>Find Children to Sponsor</CardTitle>
                         <CardDescription>Use filters to find children who need your support</CardDescription>
@@ -241,7 +241,7 @@ export default function SponsorChildren({ children, mySponsorship, filters }: Pr
                             </Button>
                         </div>
                     </CardContent>
-                </Card>
+                </Card> */}
 
                 {/* Available Children */}
                 <div className="mb-8">
@@ -295,19 +295,11 @@ export default function SponsorChildren({ children, mySponsorship, filters }: Pr
                                                     <span>{child.location}</span>
                                                 </div>
 
-                                                {child.school && (
-                                                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                                                        <GraduationCap className="h-4 w-4" />
-                                                        <span>{child.school}</span>
-                                                        {child.grade && <span>• {child.grade}</span>}
-                                                    </div>
-                                                )}
-
-                                                {child.story && (
+                                                {/*child.story && (
                                                     <p className="line-clamp-3 text-sm text-gray-700">
                                                         {child.story.length > 100 ? `${child.story.substring(0, 100)}...` : child.story}
                                                     </p>
-                                                )}
+                                                )*/}
 
                                                 <div className="flex gap-2 pt-2">
                                                     <Button className="flex-1" variant="outline" asChild>

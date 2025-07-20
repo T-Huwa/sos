@@ -470,9 +470,6 @@ function DonationsTable({ donations }: { donations: Donation[] }) {
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex gap-2">
-                                        <Button variant="outline" size="sm">
-                                            View Details
-                                        </Button>
                                         {donation.donation_type === 'goods' && donation.status === 'received' && (
                                             <Button
                                                 variant="outline"

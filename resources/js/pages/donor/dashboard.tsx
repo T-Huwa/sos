@@ -128,7 +128,7 @@ export default function DonorDashboard() {
 
                 {/* Stats Cards */}
                 {loading ? (
-                    <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
+                    <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
                         {[...Array(4)].map((_, index) => (
                             <Card key={index}>
                                 <CardContent className="p-6">
@@ -141,17 +141,6 @@ export default function DonorDashboard() {
                     </div>
                 ) : dashboardData ? (
                     <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
-                        <Card>
-                            <CardContent className="p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-600">Total Donated</p>
-                                        <p className="text-2xl font-bold text-green-600">MWK {dashboardData.stats.total_donated.toLocaleString()}</p>
-                                    </div>
-                                    <Gift className="h-8 w-8 text-green-600" />
-                                </div>
-                            </CardContent>
-                        </Card>
 
                         <Card>
                             <CardContent className="p-6">

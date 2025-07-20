@@ -104,7 +104,7 @@ export default function Dashboard({ campaigns = [] }: Props) {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
+                <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
                     <Card>
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">

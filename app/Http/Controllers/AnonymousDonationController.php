@@ -73,7 +73,7 @@ class AnonymousDonationController extends Controller
             'donation_type' => 'money',
             'amount' => $validated['amount'],
             'description' => $validated['message'],
-            'status' => 'pending',
+            'status' => 'received',
             'is_anonymous' => true,
             'anonymous_name' => $validated['anonymous_name'],
             'anonymous_email' => $validated['anonymous_email'],

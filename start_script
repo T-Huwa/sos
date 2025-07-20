@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Serve Laravel + Vite in one terminal
+
+# Run PHP server in background
+php artisan serve &
+
+# Run Vite dev server (npm run dev will block)
+npm run dev
+
+# Trap exit and kill background processes
+trap 'kill $(jobs -p)' EXIT
+
+php artisan serve &
+npm run dev

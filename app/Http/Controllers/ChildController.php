@@ -340,7 +340,7 @@ class ChildController extends Controller
             'education_level' => 'nullable|string',
         ]);
 
-        $validated['image'] = $request->file('image')->store('children', 'public');
+        $validated['image'] = $request->file('image')->store('children', 'public') || '';
 
         Child::create($validated);
 
