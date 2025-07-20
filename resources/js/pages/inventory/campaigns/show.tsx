@@ -1,10 +1,11 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Calendar, User, Image as ImageIcon, Download, Share2 } from 'lucide-react';
+import { ArrowLeft, Calendar, DollarSign, Gift, Image as ImageIcon, Package, Share2, TrendingUp, User } from 'lucide-react';
 import { useState } from 'react';
 
 interface CampaignImage {
@@ -13,12 +14,41 @@ interface CampaignImage {
     original_name: string;
 }
 
+interface DonationItem {
+    id: number;
+    item_name: string;
+    quantity: number;
+    estimated_value?: number;
+}
+
+interface CampaignDonation {
+    id: number;
+    donation_type: 'money' | 'goods';
+    amount?: number;
+    description?: string;
+    status: string;
+    is_anonymous: boolean;
+    donor_name?: string;
+    donor_email?: string;
+    created_at: string;
+    items: DonationItem[];
+}
+
+interface CampaignStatistics {
+    total_donations: number;
+    total_cash_amount: number;
+    total_item_donations: number;
+    total_items: number;
+}
+
 interface Campaign {
     id: number;
     message: string;
     created_at: string;
     created_by: string;
     images: CampaignImage[];
+    donations: CampaignDonation[];
+    statistics: CampaignStatistics;
 }
 
 interface Props {
@@ -136,15 +166,11 @@ export default function ShowCampaignPage({ campaign }: Props) {
                         <Card>
                             <CardHeader>
                                 <CardTitle>Campaign Message</CardTitle>
-                                <CardDescription>
-                                    The story and call to action for this donation campaign
-                                </CardDescription>
+                                <CardDescription>The story and call to action for this donation campaign</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div className="prose max-w-none">
-                                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                                        {campaign.message}
-                                    </p>
+                                    <p className="leading-relaxed whitespace-pre-wrap text-gray-700">{campaign.message}</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -155,9 +181,7 @@ export default function ShowCampaignPage({ campaign }: Props) {
                 <Card className="mt-6">
                     <CardHeader>
                         <CardTitle>Campaign Images</CardTitle>
-                        <CardDescription>
-                            Visual content for this donation campaign
-                        </CardDescription>
+                        <CardDescription>Visual content for this donation campaign</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {campaign.images.length > 0 ? (
@@ -174,10 +198,8 @@ export default function ShowCampaignPage({ campaign }: Props) {
                                             className="h-48 w-full object-cover transition-transform group-hover:scale-105"
                                         />
                                         <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20" />
-                                        <div className="absolute bottom-2 left-2 right-2">
-                                            <p className="truncate rounded bg-black/50 px-2 py-1 text-xs text-white">
-                                                {image.original_name}
-                                            </p>
+                                        <div className="absolute right-2 bottom-2 left-2">
+                                            <p className="truncate rounded bg-black/50 px-2 py-1 text-xs text-white">{image.original_name}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -191,12 +213,142 @@ export default function ShowCampaignPage({ campaign }: Props) {
                     </CardContent>
                 </Card>
 
+                {/* Campaign Donations Section */}
+                <Card className="mt-6">
+                    <CardHeader>
+                        <CardTitle>Campaign Donations</CardTitle>
+                        <CardDescription>Track donations received for this campaign</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {/* Statistics Cards */}
+                        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+                            <Card>
+                                <CardContent className="p-4">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-600">Total Donations</p>
+                                            <p className="text-2xl font-bold text-blue-600">{campaign.statistics.total_donations}</p>
+                                        </div>
+                                        <Gift className="h-8 w-8 text-blue-600" />
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardContent className="p-4">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-600">Cash Received</p>
+                                            <p className="text-2xl font-bold text-green-600">
+                                                MWK {campaign.statistics.total_cash_amount.toLocaleString()}
+                                            </p>
+                                        </div>
+                                        <DollarSign className="h-8 w-8 text-green-600" />
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardContent className="p-4">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-600">Item Donations</p>
+                                            <p className="text-2xl font-bold text-purple-600">{campaign.statistics.total_item_donations}</p>
+                                        </div>
+                                        <Package className="h-8 w-8 text-purple-600" />
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardContent className="p-4">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-600">Total Items</p>
+                                            <p className="text-2xl font-bold text-orange-600">{campaign.statistics.total_items}</p>
+                                        </div>
+                                        <TrendingUp className="h-8 w-8 text-orange-600" />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Donations Table */}
+                        {campaign.donations.length > 0 ? (
+                            <div className="rounded-md border">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Donor</TableHead>
+                                            <TableHead>Type</TableHead>
+                                            <TableHead>Amount/Items</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead>Date</TableHead>
+                                            <TableHead>Message</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {campaign.donations.map((donation) => (
+                                            <TableRow key={donation.id}>
+                                                <TableCell>
+                                                    <div>
+                                                        <p className="font-medium">{donation.is_anonymous ? 'Anonymous' : donation.donor_name}</p>
+                                                        {donation.donor_name && donation.is_anonymous && (
+                                                            <p className="text-sm text-gray-500">{donation.donor_name}</p>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge variant={donation.donation_type === 'money' ? 'default' : 'secondary'}>
+                                                        {donation.donation_type === 'money' ? 'Cash' : 'Items'}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {donation.donation_type === 'money' ? (
+                                                        <span className="font-medium text-green-600">MWK {donation.amount?.toLocaleString()}</span>
+                                                    ) : (
+                                                        <div>
+                                                            <p className="font-medium">{donation.items.length} item(s)</p>
+                                                            <p className="text-sm text-gray-500">
+                                                                {donation.items.reduce((sum, item) => sum + item.quantity, 0)} total qty
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge variant={donation.status === 'received' ? 'default' : 'secondary'}>
+                                                        {donation.status}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <span className="text-sm">{donation.created_at}</span>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <span className="text-sm">
+                                                        {donation.description
+                                                            ? donation.description.length > 50
+                                                                ? donation.description.substring(0, 50) + '...'
+                                                                : donation.description
+                                                            : '-'}
+                                                    </span>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        ) : (
+                            <div className="py-12 text-center">
+                                <Gift className="mx-auto h-12 w-12 text-gray-400" />
+                                <p className="mt-2 text-gray-600">No donations received yet for this campaign</p>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
                 {/* Image Modal */}
                 {selectedImageIndex !== null && (
-                    <div
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
-                        onClick={closeImageModal}
-                    >
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80" onClick={closeImageModal}>
                         <div className="relative max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
                             <img
                                 src={campaign.images[selectedImageIndex].url}
@@ -214,7 +366,7 @@ export default function ShowCampaignPage({ campaign }: Props) {
                                     {selectedImageIndex > 0 && (
                                         <button
                                             onClick={prevImage}
-                                            className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 text-gray-600 hover:bg-white hover:text-gray-900"
+                                            className="absolute top-1/2 left-4 -translate-y-1/2 rounded-full bg-white/80 p-2 text-gray-600 hover:bg-white hover:text-gray-900"
                                         >
                                             ←
                                         </button>
@@ -222,7 +374,7 @@ export default function ShowCampaignPage({ campaign }: Props) {
                                     {selectedImageIndex < campaign.images.length - 1 && (
                                         <button
                                             onClick={nextImage}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 text-gray-600 hover:bg-white hover:text-gray-900"
+                                            className="absolute top-1/2 right-4 -translate-y-1/2 rounded-full bg-white/80 p-2 text-gray-600 hover:bg-white hover:text-gray-900"
                                         >
                                             →
                                         </button>

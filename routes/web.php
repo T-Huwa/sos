@@ -9,6 +9,7 @@ use App\Models\Child;
 use App\Http\Controllers\{
     DonationController,
     DonationCampaignController,
+    CampaignDonationController,
     InventoryController,
     DistributionController,
     ChildController,
@@ -19,7 +20,24 @@ use App\Http\Controllers\{
 };
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    $campaigns = \App\Models\DonationCampaign::with(['images'])
+        ->latest()
+        ->take(3)
+        ->get()
+        ->map(function ($campaign) {
+            return [
+                'id' => $campaign->id,
+                'message' => $campaign->message,
+                'created_at' => $campaign->created_at->format('M d, Y'),
+                'created_by' => $campaign->creator->name,
+                'first_image' => $campaign->images->first()?->image_url,
+                'images_count' => $campaign->images->count(),
+            ];
+        });
+
+    return Inertia::render('welcome', [
+        'campaigns' => $campaigns,
+    ]);
 })->name('home');
 
 // Route::middleware(['auth', 'verified'])->group(function () {
@@ -177,7 +195,20 @@ Route::post('/children', [ChildController::class, 'store'])->name('children.stor
 
 Route::post('/donations', [DonationController::class, 'store']);
 Route::get('/children', [ChildController::class, 'index']);
-Route::post('/donations/webhook', [DonationController::class, 'handleWebhook']); 
+Route::post('/donations/webhook', [DonationController::class, 'handleWebhook']);
+
+// Campaign donation routes (public)
+Route::get('/campaigns/{campaign}/donate', [CampaignDonationController::class, 'show'])->name('campaigns.donate');
+Route::post('/campaigns/{campaign}/donate/anonymous', [CampaignDonationController::class, 'storeAnonymous'])->name('campaigns.donate.anonymous');
+
+// Campaign donation routes (authenticated)
+Route::middleware(['auth'])->group(function () {
+    Route::post('/campaigns/{campaign}/donate', [CampaignDonationController::class, 'store'])->name('campaigns.donate.store');
+});
+
+// Campaign donation success/callback routes
+Route::get('/campaigns/donations/{ref}/success', [CampaignDonationController::class, 'success'])->name('campaign.donation.success');
+Route::post('/campaigns/donations/callback', [CampaignDonationController::class, 'callback'])->name('campaign.donation.callback');
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

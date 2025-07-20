@@ -396,15 +396,16 @@ function DonationsTable({ donations }: { donations: Donation[] }) {
                                         <div className="flex items-center gap-2">
                                             <User className="h-4 w-4 text-gray-400" />
                                             <span className="font-medium">
-                                                {donation.donor_name}
-                                                {donation.is_anonymous && (
-                                                    <Badge variant="outline" className="ml-2 text-xs">
+                                                {donation.is_anonymous ? (
+                                                    <Badge variant="outline" className="text-xs">
                                                         Anonymous
                                                     </Badge>
+                                                ) : (
+                                                    donation.donor_name
                                                 )}
                                             </span>
                                         </div>
-                                        {donation.donor_email && (
+                                        {donation.donor_email && !donation.is_anonymous && (
                                             <div className="flex items-center gap-2">
                                                 <Mail className="h-4 w-4 text-gray-400" />
                                                 <span className="text-sm text-gray-600">{donation.donor_email}</span>

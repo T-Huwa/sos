@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SharedData } from '@/types';
@@ -5,8 +6,21 @@ import { Link, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Gift, Heart, Shield, Sparkles, Star } from 'lucide-react';
 
+interface Campaign {
+    id: number;
+    message: string;
+    created_at: string;
+    created_by: string;
+    first_image?: string;
+    images_count: number;
+}
+
+interface Props extends SharedData {
+    campaigns?: Campaign[];
+}
+
 export default function Welcome() {
-    const { auth } = usePage<SharedData>().props;
+    const { auth, campaigns } = usePage<Props>().props;
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white text-gray-800 dark:from-gray-900 dark:to-black dark:text-gray-100">
@@ -156,6 +170,59 @@ export default function Welcome() {
                     </div>
                 </div>
             </section>
+
+            {/* Active Campaigns */}
+            {campaigns && campaigns.length > 0 && (
+                <section className="px-4 py-16">
+                    <div className="container mx-auto">
+                        <div className="mb-12 text-center">
+                            <h2 className="mb-4 text-3xl font-bold text-gray-900">Active Campaigns</h2>
+                            <p className="text-lg text-gray-600">Support our current initiatives and make a direct impact</p>
+                        </div>
+                        <div className="grid gap-8 md:grid-cols-3">
+                            {campaigns.map((campaign) => (
+                                <Card key={campaign.id} className="overflow-hidden transition-shadow hover:shadow-lg">
+                                    {campaign.first_image && (
+                                        <div className="h-48 overflow-hidden">
+                                            <img src={campaign.first_image} alt="Campaign" className="h-full w-full object-cover" />
+                                        </div>
+                                    )}
+                                    <CardHeader>
+                                        <div className="flex items-center justify-between">
+                                            <Badge variant="secondary" className="text-xs">
+                                                {campaign.images_count} image{campaign.images_count !== 1 ? 's' : ''}
+                                            </Badge>
+                                            <span className="text-xs text-gray-500">{campaign.created_at}</span>
+                                        </div>
+                                        <CardTitle className="text-lg">{campaign.created_by}'s Campaign</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="mb-4 text-sm leading-relaxed text-gray-700">
+                                            {campaign.message.length > 120 ? campaign.message.substring(0, 120) + '...' : campaign.message}
+                                        </p>
+                                        <div className="flex gap-2">
+                                            <Link href={`/campaigns/${campaign.id}/donate`} className="flex-1">
+                                                <Button className="w-full bg-green-600 hover:bg-green-700">
+                                                    <Heart className="mr-2 h-4 w-4" />
+                                                    Donate Now
+                                                </Button>
+                                            </Link>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                        <div className="mt-8 text-center">
+                            <p className="text-gray-600">
+                                Want to see more campaigns or create your own?
+                                <Link href={route('register')} className="ml-1 text-blue-600 hover:underline">
+                                    Join our community
+                                </Link>
+                            </p>
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* Impact Statistics */}
             <section id="impact" className="bg-blue-600 px-4 py-16 text-white">

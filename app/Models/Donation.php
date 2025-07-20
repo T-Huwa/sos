@@ -10,7 +10,7 @@ class Donation extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'checkout_ref', 'child_id', 'donation_type', 'amount', 'description', 'status', 'receipt_path',
+        'user_id', 'checkout_ref', 'child_id', 'campaign_id', 'donation_type', 'amount', 'description', 'status', 'receipt_path',
         'is_anonymous', 'anonymous_name', 'anonymous_email', 'guest_name', 'guest_email'
     ];
 
@@ -43,5 +43,10 @@ class Donation extends Model
     public function thankYouLetter()
     {
         return $this->hasOne(ThankYouLetter::class);
+    }
+
+    public function campaign()
+    {
+        return $this->belongsTo(DonationCampaign::class, 'campaign_id');
     }
 }

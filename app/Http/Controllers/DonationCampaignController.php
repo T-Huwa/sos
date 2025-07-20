@@ -67,7 +67,15 @@ class DonationCampaignController extends Controller
 
     public function show(DonationCampaign $campaign)
     {
-        $campaign->load(['creator', 'images']);
+        $campaign->load(['creator', 'images', 'donations.items', 'donations.user']);
+
+        // Calculate donation statistics
+        $totalDonations = $campaign->donations->count();
+        $totalCashAmount = $campaign->donations->where('donation_type', 'money')->where('status', 'received')->sum('amount');
+        $totalItemDonations = $campaign->donations->where('donation_type', 'goods')->count();
+        $totalItems = $campaign->donations->where('donation_type', 'goods')->sum(function ($donation) {
+            return $donation->items->sum('quantity');
+        });
 
         return Inertia::render('inventory/campaigns/show', [
             'campaign' => [
@@ -82,6 +90,37 @@ class DonationCampaignController extends Controller
                         'original_name' => $image->original_name,
                     ];
                 }),
+                'donations' => $campaign->donations->map(function ($donation) {
+                    return [
+                        'id' => $donation->id,
+                        'donation_type' => $donation->donation_type,
+                        'amount' => $donation->amount,
+                        'description' => $donation->description,
+                        'status' => $donation->status,
+                        'is_anonymous' => $donation->is_anonymous,
+                        'donor_name' => $donation->is_anonymous
+                            ? $donation->anonymous_name
+                            : $donation->user?->name,
+                        'donor_email' => $donation->is_anonymous
+                            ? $donation->anonymous_email
+                            : $donation->user?->email,
+                        'created_at' => $donation->created_at->format('M d, Y g:i A'),
+                        'items' => $donation->items->map(function ($item) {
+                            return [
+                                'id' => $item->id,
+                                'item_name' => $item->item_name,
+                                'quantity' => $item->quantity,
+                                'estimated_value' => $item->estimated_value,
+                            ];
+                        }),
+                    ];
+                }),
+                'statistics' => [
+                    'total_donations' => $totalDonations,
+                    'total_cash_amount' => $totalCashAmount,
+                    'total_item_donations' => $totalItemDonations,
+                    'total_items' => $totalItems,
+                ],
             ],
         ]);
     }
