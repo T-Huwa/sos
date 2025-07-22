@@ -58,8 +58,10 @@ Route::middleware(['auth'])->group(function () {
             return redirect()->route('donor.dashboard');
         } elseif (auth()->user()->role === 'inventory_manager') {
             return redirect()->route('inventory.dashboard');
+        } elseif (auth()->user()->role === 'secretary') {
+            return redirect()->route('secretary.dashboard');
         }
-        return Inertia::render('dashboard');
+        //return Inertia::render('dashboard');
     })->name('dashboard');
 
     // Donations
@@ -105,6 +107,20 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/dashboard', fn () => Inertia::render('admin/dashboard'))->name('admin.dashboard');
+});
+
+// Secretary routes
+Route::middleware(['auth'])->prefix('secretary')->group(function () {
+    Route::get('/dashboard', fn () => Inertia::render('secretary/dashboard'))->name('secretary.dashboard');
+
+    // Children management routes
+    Route::get('/children', fn () => Inertia::render('secretary/children', [
+        'children' => Child::all()
+    ]))->name('secretary.children');
+
+    Route::get('/children/{id}', [ChildController::class, 'showSec'])->name('secretary.children.show');
+    //Route::get('/children/{id}', [ChildController::class, 'show'])->name('secretary.children.show');
+    Route::post('/children', [ChildController::class, 'store'])->name('secretary.children.store');
 });
 
 Route::middleware(['auth'])->prefix('sponsor')->group(function () {

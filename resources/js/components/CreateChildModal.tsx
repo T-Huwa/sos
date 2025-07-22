@@ -6,7 +6,11 @@ import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-export default function CreateChildModal() {
+interface CreateChildModalProps {
+    submitUrl?: string;
+}
+
+export default function CreateChildModal({ submitUrl = '/children' }: CreateChildModalProps) {
     const [form, setForm] = useState({
         first_name: '',
         last_name: '',
@@ -66,7 +70,7 @@ export default function CreateChildModal() {
             // Get CSRF token from meta tag
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-            const response = await fetch('/children', {
+            const response = await fetch(submitUrl, {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken || '',

@@ -58,6 +58,14 @@ const mainNavItems: NavItem[] = [
     //     role: ['inventory_manager'],
     // },
 
+    // secretary routes
+    {
+        title: 'Children',
+        href: route('secretary.children'),
+        icon: Users,
+        role: ['secretary'],
+    },
+
     // donor routes
     {
         title: 'Donations',

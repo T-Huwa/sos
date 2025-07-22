@@ -34,7 +34,7 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
             'phone' => 'required|string|max:20',
-            'role' => 'required|in:admin,donor,sponsor,inventory_manager',
+            'role' => 'required|in:admin,donor,sponsor,inventory_manager,secretary',
             'sponsor_type' => 'nullable|in:individual,organization',
             'organization_name' => 'nullable|string|max:255',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
@@ -66,6 +66,7 @@ class RegisteredUserController extends Controller
             'sponsor' => route('sponsor.dashboard'),
             'donor' => route('donor.dashboard'),
             'inventory_manager' => route('inventory.dashboard'),
+            'secretary' => route('secretary.dashboard'),
             default => route('dashboard'),
         };
     }

@@ -282,6 +282,16 @@ class ChildController extends Controller
         ]);
     }
 
+    public function showSec($id)
+    {
+        $child = Child::findOrFail($id);
+        return Inertia::render('inventory/child', [
+            'child' => $child,
+            'donations' => $child->donations()->with(['donor', 'items'])->get(),
+            'donors' => $child->donors()->distinct()->get(),
+        ]);
+    }
+
     public function indexForDonors()
     {
         $children = Child::with(['donations' => function($q) {
