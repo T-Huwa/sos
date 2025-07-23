@@ -318,14 +318,16 @@ export default function DonateToCampaignPage({ campaign }: Props) {
                                             {!auth.user && (
                                                 <div className="space-y-4 rounded-lg bg-blue-50 p-4">
                                                     <h4 className="font-medium text-blue-900">Your Information</h4>
-                                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                                    {/* <div className="grid grid-cols-1 gap-4 md:grid-cols-2"> */}
+                                                    <div>
                                                         <div>
-                                                            <Label htmlFor="anonymous_name">Full Name *</Label>
+                                                            {/* <Label htmlFor="anonymous_name">Full Name *</Label> */}
                                                             <Input
                                                                 id="anonymous_name"
-                                                                value={cashAnonymousName}
+                                                                value={'Anonymous donor'}
                                                                 onChange={(e) => setCashAnonymousName(e.target.value)}
                                                                 required
+                                                                hidden
                                                             />
                                                         </div>
                                                         <div>

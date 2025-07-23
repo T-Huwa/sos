@@ -297,7 +297,10 @@ export default function AuthenticatedDonateToCampaignPage({ campaign }: Props) {
                         <Card>
                             <CardHeader>
                                 <CardTitle>Make Your Donation</CardTitle>
-                                <CardDescription>Choose how you'd like to support this campaign</CardDescription>
+                                <CardDescription>
+                                    Choose how you'd like to support this campaign. Note that you are donating anonymously. We only require your name
+                                    or email so that we can email your receipt
+                                </CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <Tabs value={activeTab} onValueChange={setActiveTab}>

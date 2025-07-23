@@ -201,16 +201,18 @@ const AnonymousDonationForm: React.FC = () => {
                 {/* Donor Information */}
                 <div className="space-y-4">
                     <h3 className="text-lg font-semibold">Your Information</h3>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {/* <div className="grid grid-cols-1 gap-4 md:grid-cols-2"> */}
+                    <div>
                         <div className="space-y-2">
-                            <Label htmlFor="donorName">Your Name *</Label>
+                            {/* <Label htmlFor="donorName">Your Name *</Label> */}
                             <Input
                                 id="donorName"
                                 placeholder="Enter your name"
-                                value={donorName}
+                                value={'Anonymous donor'}
                                 onChange={(e) => setDonorName(e.target.value)}
                                 disabled={loading}
                                 required
+                                hidden
                                 className={getFieldError('anonymous_name') ? 'border-red-500 focus:border-red-500' : ''}
                             />
                             {getFieldError('anonymous_name') && <p className="text-sm text-red-600">{getFieldError('anonymous_name')}</p>}
