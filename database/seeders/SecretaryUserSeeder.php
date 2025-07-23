@@ -12,7 +12,9 @@ class SecretaryUserSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('users')->insert([
+
+        // Secretary
+        /*User::firstOrCreate([
             'name' => 'Secretary User',
             'email' => 'secretary@example.com',
             'email_verified_at' => now(),
@@ -25,56 +27,38 @@ class SecretaryUserSeeder extends Seeder
             'remember_token' => Str::random(10),
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
+        ]);*/
 
-        User::create([
+        // Accountant "User
+        User::firstOrCreate([
             'name' => 'Accountant User',
             'email' => 'accountant@example.com',
+            'email_verified_at' => now(),
+            'password' => Hash::make('test1234'),
             'phone' => '555-987-6543',
             'role' => 'accountant',
+            'profile_photo' => null,
             'sponsor_type' => null,
             'organization_name' => null,
-            'password' => Hash::make('test1234'),
+            'remember_token' => Str::random(10),
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
-
-        User::create([
+/*
+        // Inventory manager
+        User::firstOrCreate([
             'name' => 'Manager User',
             'email' => 'manager@example.com',
+            'email_verified_at' => now(),
+            'password' => Hash::make('test1234'),
             'phone' => '555-987-6543',
             'role' => 'inventory_manager',
+            'profile_photo' => null,
             'sponsor_type' => null,
             'organization_name' => null,
-            'password' => Hash::make('test1234'),
-        ]);
-
-        // DB::table('users')->insert([
-        //     'name' => 'Accountant User',
-        //     'email' => 'accountant@example.com',
-        //     'email_verified_at' => now(),
-        //     'password' => Hash::make('test1234'),
-        //     'phone' => '555-987-6543',
-        //     'role' => 'accountant',
-        //     'profile_photo' => null,
-        //     'sponsor_type' => null,
-        //     'organization_name' => null,
-        //     'remember_token' => Str::random(10),
-        //     'created_at' => now(),
-        //     'updated_at' => now(),
-        // ]);
-
-        // DB::table('users')->insert([
-        //     'name' => 'Manager User',
-        //     'email' => 'manager@example.com',
-        //     'email_verified_at' => now(),
-        //     'password' => Hash::make('test1234'),
-        //     'phone' => '555-987-6543',
-        //     'role' => 'manager',
-        //     'profile_photo' => null,
-        //     'sponsor_type' => null,
-        //     'organization_name' => null,
-        //     'remember_token' => Str::random(10),
-        //     'created_at' => now(),
-        //     'updated_at' => now(),
-        // ]);
+            'remember_token' => Str::random(10),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);*/
     }
 }

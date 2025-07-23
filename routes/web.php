@@ -16,7 +16,8 @@ use App\Http\Controllers\{
     SponsorshipController,
     ProgressReportController,
     ReceiptController,
-    ThankYouLetterController
+    ThankYouLetterController,
+    AccountantController
 };
 
 Route::get('/', function () {
@@ -60,6 +61,8 @@ Route::middleware(['auth'])->group(function () {
             return redirect()->route('inventory.dashboard');
         } elseif (auth()->user()->role === 'secretary') {
             return redirect()->route('secretary.dashboard');
+        } elseif (auth()->user()->role === 'accountant') {
+            return redirect()->route('accountant.dashboard');
         }
         //return Inertia::render('dashboard');
     })->name('dashboard');
@@ -218,6 +221,22 @@ Route::middleware(['auth'])->prefix('inventory')->group(function () {
     Route::get('/campaigns/{campaign}', [DonationCampaignController::class, 'show'])->name('inventory.campaigns.show');
 });
 
+// Accountant routes
+Route::middleware(['auth'])->prefix('accountant')->group(function () {
+    Route::get('/dashboard', [AccountantController::class, 'dashboard'])->name('accountant.dashboard');
+
+    // Cash donations routes
+    Route::get('/donations', [AccountantController::class, 'donations'])->name('accountant.donations');
+
+    // Campaign routes (view only)
+    Route::get('/campaigns', [AccountantController::class, 'campaigns'])->name('accountant.campaigns');
+    Route::get('/campaigns/{campaign}', [AccountantController::class, 'showCampaign'])->name('accountant.campaigns.show');
+
+    // Children routes (view only)
+    Route::get('/children', [AccountantController::class, 'children'])->name('accountant.children');
+    Route::get('/children/{child}', [AccountantController::class, 'showChild'])->name('accountant.children.show');
+});
+
 Route::get('/donations/{ref}/success', function ($ref) {
     $donation = \App\Models\Donation::where('checkout_ref', $ref)->firstOrFail();
     return Inertia::render('DonationSuccess', ['donation' => $donation]);
@@ -229,7 +248,6 @@ Route::get('/children/{id}', [ChildController::class, 'show'])->name('children.s
 Route::post('/children', [ChildController::class, 'store'])->name('children.store');
 
 Route::post('/donations', [DonationController::class, 'store']);
-Route::get('/children', [ChildController::class, 'index']);
 Route::post('/donations/webhook', [DonationController::class, 'handleWebhook']);
 
 // Campaign donation routes (public)

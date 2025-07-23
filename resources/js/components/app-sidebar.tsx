@@ -66,6 +66,26 @@ const mainNavItems: NavItem[] = [
         role: ['secretary'],
     },
 
+    // accountant routes
+    {
+        title: 'Cash Donations',
+        href: route('accountant.donations'),
+        icon: DollarSign,
+        role: ['accountant'],
+    },
+    {
+        title: 'Campaigns',
+        href: route('accountant.campaigns'),
+        icon: MessageCircle,
+        role: ['accountant'],
+    },
+    {
+        title: 'Children',
+        href: route('accountant.children'),
+        icon: Users,
+        role: ['accountant'],
+    },
+
     // donor routes
     {
         title: 'Donations',
