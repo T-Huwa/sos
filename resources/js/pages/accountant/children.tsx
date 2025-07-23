@@ -1,4 +1,3 @@
-import CreateChildModal from '@/components/CreateChildModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -56,7 +55,6 @@ export default function ChildrenPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="mb-4 flex items-center justify-between">
-                        <CreateChildModal />
                         <Button variant="outline">Export Data</Button>
                     </div>
                     <Table>

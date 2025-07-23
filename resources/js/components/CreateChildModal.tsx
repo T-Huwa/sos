@@ -155,7 +155,7 @@ export default function CreateChildModal({ submitUrl = '/children' }: CreateChil
                         </select>
                     </div>
 
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                         <Label htmlFor="health_status">Health Status</Label>
                         <Input
                             id="health_status"
@@ -165,6 +165,22 @@ export default function CreateChildModal({ submitUrl = '/children' }: CreateChil
                             disabled={isLoading}
                             placeholder="e.g., Healthy, Needs medical attention"
                         />
+                    </div> */}
+
+                    <div className="space-y-2">
+                        <Label htmlFor="health_status">Health Status</Label>
+                        <select
+                            id="health_status"
+                            name="health_status"
+                            value={form.health_status}
+                            onChange={handleChange}
+                            disabled={isLoading}
+                            className="w-full rounded border p-2 disabled:opacity-50"
+                        >
+                            <option value="healthy">Healthy</option>
+                            <option value="good">Good</option>
+                            <option value="sick">Sick</option>
+                        </select>
                     </div>
 
                     <div className="space-y-2">
