@@ -42,7 +42,7 @@ class DonationCampaignController extends Controller
         $validated = $request->validate([
             'message' => 'required|string|min:10',
             'images' => 'required|array|min:1|max:10',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            // 'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $campaign = DonationCampaign::create([

@@ -93,14 +93,17 @@ export default function CreateCampaignPage() {
             return;
         }
 
-        post('/inventory/campaigns', {
-            onSuccess: () => {
-                toast.success('Campaign created successfully!');
-            },
-            onError: () => {
-                toast.error('Failed to create campaign. Please try again.');
-            },
-        });
+post('/inventory/campaigns', {
+    forceFormData: true,
+    onSuccess: () => {
+        toast.success('Campaign created successfully!');
+    },
+    onError: (e) => {
+        toast.error('Failed to create campaign. Please try again.');
+        console.log(e)
+    },
+});
+
     };
 
     return (

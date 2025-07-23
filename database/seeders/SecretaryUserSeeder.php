@@ -27,7 +27,7 @@ class SecretaryUserSeeder extends Seeder
             'remember_token' => Str::random(10),
             'created_at' => now(),
             'updated_at' => now(),
-        ]);*/
+        ]);
 
         // Accountant "User
         User::firstOrCreate([
@@ -43,8 +43,8 @@ class SecretaryUserSeeder extends Seeder
             'remember_token' => Str::random(10),
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
-/*
+        ]);*/
+
         // Inventory manager
         User::firstOrCreate([
             'name' => 'Manager User',
@@ -59,6 +59,6 @@ class SecretaryUserSeeder extends Seeder
             'remember_token' => Str::random(10),
             'created_at' => now(),
             'updated_at' => now(),
-        ]);*/
+        ]);
     }
 }
