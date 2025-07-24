@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { Calendar, Gift, Mail, Package, Search, User } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -49,6 +49,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function InventoryDonationsPage({ donations }: Props) {
+    const page = usePage();
+    const userRole = (page.props as any).auth?.user?.role;
+    const isInventoryManager = userRole === 'inventory_manager';
+
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -129,17 +133,19 @@ export default function InventoryDonationsPage({ donations }: Props) {
                         </CardContent>
                     </Card>
 
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600">Cash Received</p>
-                                    <p className="text-2xl font-bold text-green-600">MWK {getTotalValue().toLocaleString()}</p>
+                    {!isInventoryManager && (
+                        <Card>
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-600">Cash Received</p>
+                                        <p className="text-2xl font-bold text-green-600">MWK {getTotalValue().toLocaleString()}</p>
+                                    </div>
+                                    <Gift className="h-8 w-8 text-green-600" />
                                 </div>
-                                <Gift className="h-8 w-8 text-green-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
+                    )}
 
                     <Card>
                         <CardContent className="p-6">
@@ -171,7 +177,7 @@ export default function InventoryDonationsPage({ donations }: Props) {
                         <TabsList>
                             <TabsTrigger value="all">All Donations</TabsTrigger>
                             <TabsTrigger value="items">Item Donations</TabsTrigger>
-                            <TabsTrigger value="cash">Cash Donations</TabsTrigger>
+                            {!isInventoryManager && <TabsTrigger value="cash">Cash Donations</TabsTrigger>}
                         </TabsList>
 
                         {/* Search and Filters */}
@@ -199,23 +205,31 @@ export default function InventoryDonationsPage({ donations }: Props) {
                     </div>
 
                     <TabsContent value="all">
-                        <DonationsTable donations={filteredDonations} />
+                        <DonationsTable donations={filteredDonations} isInventoryManager={isInventoryManager} />
                     </TabsContent>
 
                     <TabsContent value="items">
-                        <DonationsTable donations={filteredDonations.filter((d) => d.donation_type === 'goods')} />
+                        <DonationsTable
+                            donations={filteredDonations.filter((d) => d.donation_type === 'goods')}
+                            isInventoryManager={isInventoryManager}
+                        />
                     </TabsContent>
 
-                    <TabsContent value="cash">
-                        <DonationsTable donations={filteredDonations.filter((d) => d.donation_type === 'money')} />
-                    </TabsContent>
+                    {!isInventoryManager && (
+                        <TabsContent value="cash">
+                            <DonationsTable
+                                donations={filteredDonations.filter((d) => d.donation_type === 'money')}
+                                isInventoryManager={isInventoryManager}
+                            />
+                        </TabsContent>
+                    )}
                 </Tabs>
             </div>
         </AppLayout>
     );
 }
 
-function DonationsTable({ donations }: { donations: Donation[] }) {
+function DonationsTable({ donations, isInventoryManager }: { donations: Donation[]; isInventoryManager: boolean }) {
     const [loadingInventory, setLoadingInventory] = useState<number | null>(null);
     const [successfullyAdded, setSuccessfullyAdded] = useState<number[]>([]);
 
@@ -384,9 +398,8 @@ function DonationsTable({ donations }: { donations: Donation[] }) {
                     </TableHeader>
                     <TableBody>
                         {donations.map((donation) => {
-                        if(donation.donation_type === 'goods')
-                            return null;
-                        else return 
+                            if (donation.donation_type === 'goods') return null;
+                            else return;
                             <TableRow key={donation.id} className={successfullyAdded.includes(donation.id) ? 'border-green-200 bg-green-50' : ''}>
                                 <TableCell>
                                     <div className="flex items-center gap-2">
@@ -430,7 +443,11 @@ function DonationsTable({ donations }: { donations: Donation[] }) {
                                     {donation.donation_type === 'money' ? (
                                         <div className="flex items-center gap-2">
                                             <Gift className="h-4 w-4 text-green-500" />
-                                            <span className="font-semibold text-green-600">MWK {donation.amount?.toLocaleString()}</span>
+                                            {!isInventoryManager ? (
+                                                <span className="font-semibold text-green-600">MWK {donation.amount?.toLocaleString()}</span>
+                                            ) : (
+                                                <span className="font-semibold text-green-600">Cash Donation</span>
+                                            )}
                                         </div>
                                     ) : (
                                         <div className="space-y-1">
@@ -443,7 +460,7 @@ function DonationsTable({ donations }: { donations: Donation[] }) {
                                                     <div key={item.id} className="flex items-center justify-between text-sm text-gray-600">
                                                         <div>
                                                             <span className="font-medium">{item.quantity}×</span> {item.item_name}
-                                                            {item.estimated_value && (
+                                                            {item.estimated_value && !isInventoryManager && (
                                                                 <span className="ml-2 text-green-600">
                                                                     (MWK {item.estimated_value.toLocaleString()})
                                                                 </span>
@@ -501,7 +518,7 @@ function DonationsTable({ donations }: { donations: Donation[] }) {
                                         )}
                                     </div>
                                 </TableCell>
-                            </TableRow>
+                            </TableRow>;
                         })}
                     </TableBody>
                 </Table>

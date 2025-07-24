@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowLeft, Calendar, DollarSign, Gift, Image as ImageIcon, Package, Share2, TrendingUp, User } from 'lucide-react';
 import { useState } from 'react';
 
@@ -71,6 +71,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function ShowCampaignPage({ campaign }: Props) {
+    const page = usePage();
+    const userRole = (page.props as any).auth?.user?.role;
+    const isInventoryManager = userRole === 'inventory_manager';
+
     const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
     const openImageModal = (index: number) => {
@@ -234,19 +238,21 @@ export default function ShowCampaignPage({ campaign }: Props) {
                                 </CardContent>
                             </Card>
 
-                            <Card>
-                                <CardContent className="p-4">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm font-medium text-gray-600">Cash Received</p>
-                                            <p className="text-2xl font-bold text-green-600">
-                                                MWK {campaign.statistics.total_cash_amount.toLocaleString()}
-                                            </p>
+                            {!isInventoryManager && (
+                                <Card>
+                                    <CardContent className="p-4">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-600">Cash Received</p>
+                                                <p className="text-2xl font-bold text-green-600">
+                                                    MWK {campaign.statistics.total_cash_amount.toLocaleString()}
+                                                </p>
+                                            </div>
+                                            <DollarSign className="h-8 w-8 text-green-600" />
                                         </div>
-                                        <DollarSign className="h-8 w-8 text-green-600" />
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                    </CardContent>
+                                </Card>
+                            )}
 
                             <Card>
                                 <CardContent className="p-4">

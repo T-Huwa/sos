@@ -47,7 +47,10 @@ const ChildProfileImage = memo(({ child }: { child: any }) => {
 ChildProfileImage.displayName = 'ChildProfileImage';
 
 export default function ChildViewPage() {
-    const { child, donations, donors } = usePage().props as any;
+    const page = usePage();
+    const { child, donations, donors } = page.props as any;
+    const userRole = (page.props as any).auth?.user?.role;
+    const isInventoryManager = userRole === 'inventory_manager';
 
     const [editing, setEditing] = useState(false);
     const [form, setForm] = useState({ ...child });
@@ -225,7 +228,7 @@ export default function ChildViewPage() {
 
                                                     {donation.donation_type === 'money' ? (
                                                         <div className="text-lg font-semibold text-green-600">
-                                                            MWK {donation.amount?.toLocaleString()}
+                                                            {!isInventoryManager ? <>MWK {donation.amount?.toLocaleString()}</> : <>Cash Donation</>}
                                                         </div>
                                                     ) : (
                                                         <div className="space-y-2">
@@ -244,7 +247,7 @@ export default function ChildViewPage() {
                                                                         </div>
                                                                         <div className="text-sm text-gray-600">
                                                                             Qty: {item.quantity}
-                                                                            {item.estimated_value && (
+                                                                            {item.estimated_value && !isInventoryManager && (
                                                                                 <span className="ml-2 text-green-600">
                                                                                     (MWK {item.estimated_value.toLocaleString()})
                                                                                 </span>
@@ -339,7 +342,7 @@ export default function ChildViewPage() {
                                                                     </div>
                                                                     <div className="text-sm">
                                                                         <span className="font-semibold">Qty: {item.quantity}</span>
-                                                                        {item.estimated_value && (
+                                                                        {item.estimated_value && !isInventoryManager && (
                                                                             <span className="ml-2 text-green-600">
                                                                                 (Est. MWK {item.estimated_value.toLocaleString()})
                                                                             </span>
