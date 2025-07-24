@@ -110,14 +110,14 @@ export default function ChildViewPage() {
                 {/* 🧾 Header & Actions */}
                 <div className="flex items-center justify-between">
                     <h1 className="text-3xl font-bold text-gray-800">Child Profile</h1>
-                    <div className="flex gap-3">
+                    {/* <div className="flex gap-3">
                         <Button variant="outline" onClick={() => setEditing(!editing)}>
                             {editing ? 'Cancel' : 'Edit'}
                         </Button>
                         <Button variant="destructive" onClick={handleDelete}>
                             Delete
                         </Button>
-                    </div>
+                    </div> */}
                 </div>
                 {/* 🧍 Child Info */}
                 <div className="space-y-4">
@@ -170,7 +170,7 @@ export default function ChildViewPage() {
                         <Tabs defaultValue="all" className="w-full">
                             <TabsList className="grid w-full grid-cols-3">
                                 <TabsTrigger value="all">All Donations</TabsTrigger>
-                                <TabsTrigger value="cash">Cash Donations</TabsTrigger>
+                                {/* <TabsTrigger value="cash">Cash Donations</TabsTrigger> */}
                                 <TabsTrigger value="items">Item Donations</TabsTrigger>
                             </TabsList>
 
@@ -268,7 +268,7 @@ export default function ChildViewPage() {
                                 ))}
                             </TabsContent>
 
-                            <TabsContent value="cash" className="space-y-4">
+                            {/* <TabsContent value="cash" className="space-y-4">
                                 {(donations || [])
                                     .filter((d: any) => d.donation_type === 'money')
                                     .map((donation: any) => (
@@ -299,7 +299,7 @@ export default function ChildViewPage() {
                                 {(donations || []).filter((d: any) => d.donation_type === 'money').length === 0 && (
                                     <div className="py-8 text-center text-gray-500">No cash donations yet.</div>
                                 )}
-                            </TabsContent>
+                            </TabsContent> */}
 
                             <TabsContent value="items" className="space-y-4">
                                 {(donations || [])

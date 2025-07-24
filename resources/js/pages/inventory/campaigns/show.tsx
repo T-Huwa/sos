@@ -280,8 +280,7 @@ export default function ShowCampaignPage({ campaign }: Props) {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>Donor</TableHead>
-                                            <TableHead>Type</TableHead>
-                                            <TableHead>Amount/Items</TableHead>
+                                            <TableHead>Items</TableHead>
                                             <TableHead>Status</TableHead>
                                             <TableHead>Date</TableHead>
                                             <TableHead>Message</TableHead>
@@ -299,21 +298,12 @@ export default function ShowCampaignPage({ campaign }: Props) {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Badge variant={donation.donation_type === 'money' ? 'default' : 'secondary'}>
-                                                        {donation.donation_type === 'money' ? 'Cash' : 'Items'}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell>
-                                                    {donation.donation_type === 'money' ? (
-                                                        <span className="font-medium text-green-600">MWK {donation.amount?.toLocaleString()}</span>
-                                                    ) : (
-                                                        <div>
-                                                            <p className="font-medium">{donation.items.length} item(s)</p>
-                                                            <p className="text-sm text-gray-500">
-                                                                {donation.items.reduce((sum, item) => sum + item.quantity, 0)} total qty
-                                                            </p>
-                                                        </div>
-                                                    )}
+                                                    <div>
+                                                        <p className="font-medium">{donation.items.length} item(s)</p>
+                                                        <p className="text-sm text-gray-500">
+                                                            {donation.items.reduce((sum, item) => sum + item.quantity, 0)} total qty
+                                                        </p>
+                                                    </div>
                                                 </TableCell>
                                                 <TableCell>
                                                     <Badge variant={donation.status === 'received' ? 'default' : 'secondary'}>

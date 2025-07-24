@@ -376,14 +376,17 @@ function DonationsTable({ donations }: { donations: Donation[] }) {
                             <TableHead>Date</TableHead>
                             <TableHead>Donor</TableHead>
                             <TableHead>Child</TableHead>
-                            <TableHead>Amount / Items</TableHead>
-                            <TableHead>Type</TableHead>
+                            <TableHead>Items</TableHead>
+                            {/* <TableHead>Type</TableHead> */}
                             <TableHead>Status</TableHead>
                             <TableHead>Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {donations.map((donation) => (
+                        {donations.map((donation) => {
+                        if(donation.donation_type === 'goods')
+                            return null;
+                        else return 
                             <TableRow key={donation.id} className={successfullyAdded.includes(donation.id) ? 'border-green-200 bg-green-50' : ''}>
                                 <TableCell>
                                     <div className="flex items-center gap-2">
@@ -457,12 +460,12 @@ function DonationsTable({ donations }: { donations: Donation[] }) {
                                         </div>
                                     )}
                                 </TableCell>
-                                <TableCell>
+                                {/* <TableCell>
                                     <Badge variant="secondary" className="flex items-center gap-1">
                                         {donation.donation_type === 'money' ? <Gift className="h-3 w-3" /> : <Package className="h-3 w-3" />}
                                         {donation.donation_type === 'money' ? 'Cash' : 'Items'}
                                     </Badge>
-                                </TableCell>
+                                </TableCell> */}
                                 <TableCell>
                                     <Badge variant={getStatusBadgeVariant(donation.status)}>
                                         {donation.status.charAt(0).toUpperCase() + donation.status.slice(1)}
@@ -499,7 +502,7 @@ function DonationsTable({ donations }: { donations: Donation[] }) {
                                     </div>
                                 </TableCell>
                             </TableRow>
-                        ))}
+                        })}
                     </TableBody>
                 </Table>
             </CardContent>

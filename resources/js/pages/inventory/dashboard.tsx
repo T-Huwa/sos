@@ -33,7 +33,7 @@ export default function DashboardPage() {
                             </div>
                         </CardContent>
                     </Card>
-
+{/* 
                     <Card>
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
@@ -45,7 +45,7 @@ export default function DashboardPage() {
                                 <DollarSign className="h-8 w-8 text-purple-600" />
                             </div>
                         </CardContent>
-                    </Card>
+                    </Card> */}
 
                     <Card>
                         <CardContent className="p-6">
