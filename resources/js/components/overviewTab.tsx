@@ -6,6 +6,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { usePage } from '@inertiajs/react';
 import { AlertTriangle, Package } from 'lucide-react';
 
+interface DashboardData {
+    totalChildren?: number;
+    childrenThisMonth?: number;
+    activeDonors?: number;
+    urgentCases?: number;
+    totalInventoryItems?: number;
+    totalItemTypes?: number;
+    criticalItems?: number;
+    lowStockItems?: number;
+    recentDonations?: Array<{
+        id: number;
+        created_at: string;
+        donor_name: string;
+        child_name: string;
+        items_count: number;
+        total_quantity: number;
+    }>;
+}
+
+interface Props {
+    dashboardData?: DashboardData;
+}
+
 const urgentChildren = [
     {
         id: 1,
@@ -67,10 +90,21 @@ const inventoryAlerts = [
     { item: 'School Shoes', stock: 25, threshold: 30, status: 'Good' },
 ];
 
-export default function OverviewTab() {
+export default function OverviewTab({ dashboardData }: Props) {
     const page = usePage();
     const userRole = (page.props as any).auth?.user?.role;
     const isInventoryManager = userRole === 'inventory_manager';
+
+    // Use real data if available, otherwise fall back to sample data
+    const recentDonationsData = dashboardData?.recentDonations || recentDonations;
+    const inventoryAlertsData = dashboardData
+        ? [
+              { item: 'Critical Stock Items', stock: dashboardData.criticalItems || 0, threshold: 5, status: 'Critical' },
+              { item: 'Low Stock Items', stock: dashboardData.lowStockItems || 0, threshold: 15, status: 'Low' },
+              { item: 'Total Item Types', stock: dashboardData.totalItemTypes || 0, threshold: 100, status: 'Good' },
+              { item: 'Total Items in Stock', stock: dashboardData.totalInventoryItems || 0, threshold: 1000, status: 'Good' },
+          ]
+        : inventoryAlerts;
 
     return (
         <div className="space-y-6">
@@ -111,19 +145,23 @@ export default function OverviewTab() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            {recentDonations.map((donation) => (
+                            {recentDonationsData.map((donation) => (
                                 <div
                                     key={donation.id}
                                     className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-3"
                                 >
                                     <div>
-                                        <p className="font-medium">{donation.donor}</p>
-                                        <p className="text-sm text-gray-600">to {donation.child}</p>
-                                        <p className="text-xs text-gray-500">{donation.date}</p>
+                                        <p className="font-medium">{donation.donor_name || donation.donor}</p>
+                                        <p className="text-sm text-gray-600">to {donation.child_name || donation.child}</p>
+                                        <p className="text-xs text-gray-500">{donation.created_at || donation.date}</p>
                                     </div>
                                     <div className="text-right">
                                         <p className="font-medium">
-                                            {isInventoryManager && donation.type === 'Money' ? 'Cash Donation' : donation.amount}
+                                            {dashboardData
+                                                ? `${donation.items_count || 0} items (${donation.total_quantity || 0} total)`
+                                                : isInventoryManager && donation.type === 'Money'
+                                                  ? 'Cash Donation'
+                                                  : donation.amount}
                                         </p>
                                         <Badge variant="secondary">{donation.type}</Badge>
                                     </div>
@@ -144,7 +182,7 @@ export default function OverviewTab() {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        {inventoryAlerts.map((item, index) => (
+                        {inventoryAlertsData.map((item, index) => (
                             <div key={index} className="flex items-center justify-between rounded-lg border p-3">
                                 <div>
                                     <p className="font-medium">{item.item}</p>

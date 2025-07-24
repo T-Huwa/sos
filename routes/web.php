@@ -17,7 +17,8 @@ use App\Http\Controllers\{
     ProgressReportController,
     ReceiptController,
     ThankYouLetterController,
-    AccountantController
+    AccountantController,
+    InventoryManagerController
 };
 
 Route::get('/', function () {
@@ -196,7 +197,7 @@ Route::middleware(['auth'])->prefix('donor')->group(function () {
 
 // Inventory manager routes
 Route::middleware(['auth'])->prefix('inventory')->group(function () {
-    Route::get('/dashboard', fn () => Inertia::render('inventory/dashboard'))->name('inventory.dashboard');
+    Route::get('/dashboard', [InventoryManagerController::class, 'dashboard'])->name('inventory.dashboard');
     
     // children routes
     Route::get('/children', fn () => Inertia::render('inventory/children', [

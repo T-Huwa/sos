@@ -1,9 +1,32 @@
 import OverviewTab from '@/components/overviewTab';
 import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import { AlertTriangle, DollarSign, Gift, Users } from 'lucide-react';
+import { AlertTriangle, Gift, Users } from 'lucide-react';
 
-export default function DashboardPage() {
+interface DashboardData {
+    totalChildren: number;
+    childrenThisMonth: number;
+    activeDonors: number;
+    urgentCases: number;
+    totalInventoryItems: number;
+    totalItemTypes: number;
+    criticalItems: number;
+    lowStockItems: number;
+    recentDonations: Array<{
+        id: number;
+        created_at: string;
+        donor_name: string;
+        child_name: string;
+        items_count: number;
+        total_quantity: number;
+    }>;
+}
+
+interface Props {
+    dashboardData: DashboardData;
+}
+
+export default function DashboardPage({ dashboardData }: Props) {
     return (
         <AppLayout>
             <div className="container mx-auto px-4 py-8">
@@ -13,8 +36,8 @@ export default function DashboardPage() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-gray-600">Total Children</p>
-                                    <p className="text-2xl font-bold text-blue-600">2,847</p>
-                                    <p className="text-xs text-green-600">+12 this month</p>
+                                    <p className="text-2xl font-bold text-blue-600">{dashboardData.totalChildren.toLocaleString()}</p>
+                                    <p className="text-xs text-green-600">+{dashboardData.childrenThisMonth} this month</p>
                                 </div>
                                 <Users className="h-8 w-8 text-blue-600" />
                             </div>
@@ -26,14 +49,14 @@ export default function DashboardPage() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-gray-600">Active Donors</p>
-                                    <p className="text-2xl font-bold text-green-600">1,256</p>
-                                    <p className="text-xs text-green-600">+45 this month</p>
+                                    <p className="text-2xl font-bold text-green-600">{dashboardData.activeDonors.toLocaleString()}</p>
+                                    <p className="text-xs text-gray-600">Total unique donors</p>
                                 </div>
                                 <Gift className="h-8 w-8 text-green-600" />
                             </div>
                         </CardContent>
                     </Card>
-{/* 
+                    {/* 
                     <Card>
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
@@ -52,7 +75,7 @@ export default function DashboardPage() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-gray-600">Urgent Cases</p>
-                                    <p className="text-2xl font-bold text-red-600">23</p>
+                                    <p className="text-2xl font-bold text-red-600">{dashboardData.urgentCases}</p>
                                     <p className="text-xs text-red-600">Needs immediate attention</p>
                                 </div>
                                 <AlertTriangle className="h-8 w-8 text-red-600" />
@@ -60,7 +83,7 @@ export default function DashboardPage() {
                         </CardContent>
                     </Card>
                 </div>
-                <OverviewTab />
+                <OverviewTab dashboardData={dashboardData} />
             </div>
         </AppLayout>
     );

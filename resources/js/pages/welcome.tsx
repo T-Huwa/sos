@@ -224,31 +224,6 @@ export default function Welcome() {
                 </section>
             )}
 
-            {/* Impact Statistics */}
-            <section id="impact" className="bg-blue-600 px-4 py-16 text-white">
-                <div className="container mx-auto text-center">
-                    <h2 className="mb-12 text-3xl font-bold">Our Impact in Malawi</h2>
-                    <div className="grid gap-8 md:grid-cols-4">
-                        <div>
-                            <div className="mb-2 text-4xl font-bold">2,847</div>
-                            <div className="text-blue-100">Children Supported</div>
-                        </div>
-                        <div>
-                            <div className="mb-2 text-4xl font-bold">MWK 45M</div>
-                            <div className="text-blue-100">Total Donations</div>
-                        </div>
-                        <div>
-                            <div className="mb-2 text-4xl font-bold">1,256</div>
-                            <div className="text-blue-100">Active Donors</div>
-                        </div>
-                        <div>
-                            <div className="mb-2 text-4xl font-bold">542</div>
-                            <div className="text-blue-100">Sponsored Children</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             {/* Footer */}
             <footer className="bg-gray-900 px-4 py-12 text-white">
                 <div className="container mx-auto">

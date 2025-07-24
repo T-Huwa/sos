@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Child;
 use App\Models\Donation;
 use App\Models\DonationCampaign;
-use App\Models\Child;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -15,7 +15,58 @@ class AccountantController extends Controller
      */
     public function dashboard()
     {
-        return Inertia::render('accountant/dashboard');
+        // Get total children count
+        $totalChildren = Child::count();
+
+        // Get children count from this month
+        $childrenThisMonth = Child::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+
+        // Get active donors (users who have made donations)
+        $activeDonors = Donation::distinct('user_id')
+            ->whereNotNull('user_id')
+            ->count();
+
+        // Add anonymous/guest donors
+        $anonymousDonors = Donation::where(function($query) {
+            $query->whereNotNull('anonymous_name')
+                  ->orWhereNotNull('guest_name');
+        })->count();
+
+        $totalActiveDonors = $activeDonors + $anonymousDonors;
+
+        // Get monthly cash donations
+        $monthlyDonations = Donation::where('donation_type', 'money')
+            ->where('status', 'received')
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->sum('amount');
+
+        // Get last month's donations for comparison
+        $lastMonthDonations = Donation::where('donation_type', 'money')
+            ->where('status', 'received')
+            ->whereMonth('created_at', now()->subMonth()->month)
+            ->whereYear('created_at', now()->subMonth()->year)
+            ->sum('amount');
+
+        // Calculate percentage change
+        $donationChange = 0;
+        if ($lastMonthDonations > 0) {
+            $donationChange = (($monthlyDonations - $lastMonthDonations) / $lastMonthDonations) * 100;
+        } elseif ($monthlyDonations > 0) {
+            $donationChange = 100; // 100% increase if last month was 0
+        }
+
+        return Inertia::render('accountant/dashboard', [
+            'dashboardData' => [
+                'totalChildren' => $totalChildren,
+                'childrenThisMonth' => $childrenThisMonth,
+                'activeDonors' => $totalActiveDonors,
+                'monthlyDonations' => $monthlyDonations,
+                'donationChange' => round($donationChange, 1),
+            ]
+        ]);
     }
 
     /**
