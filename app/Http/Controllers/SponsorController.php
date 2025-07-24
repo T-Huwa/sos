@@ -179,12 +179,13 @@ class SponsorController extends Controller
             $child->hobbies = $child->hobbies ?? 'Reading, playing football, drawing';
         });
 
+        $dur = $sponsorships->min('start_date') ? now()->diffInMonths($sponsorships->min('start_date')) : 0;
+
         // Calculate statistics
         $stats = [
             'total_sponsored' => $sponsorships->count(),
-            'total_contributed' => 0, // This would come from donations if implemented
-            'sponsorship_duration' => $sponsorships->min('start_date') ?
-                now()->diffInMonths($sponsorships->min('start_date')) : 0,
+            'total_contributed' => 0,
+            'sponsorship_duration' => $dur > 0 ? $dur : 0,
         ];
 
         return Inertia::render('sponsor/my-sponsorships', [

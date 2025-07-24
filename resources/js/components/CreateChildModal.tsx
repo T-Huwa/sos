@@ -78,6 +78,8 @@ export default function CreateChildModal({ submitUrl = '/children' }: CreateChil
                 body: formData,
             });
 
+            console.log(await response.body)
+
             if (response.ok) {
                 toast.success('Child added successfully!');
                 setIsOpen(false);
@@ -95,6 +97,7 @@ export default function CreateChildModal({ submitUrl = '/children' }: CreateChil
                 location.reload();
             } else {
                 const errorData = await response.json().catch(() => ({}));
+                console.log(errorData);
                 const errorMessage = errorData.message || 'Failed to add child. Please try again.';
                 toast.error(errorMessage);
             }

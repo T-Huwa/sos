@@ -73,6 +73,8 @@ export default function MySponsorship({ sponsorships, stats }: Props) {
         });
     };
 
+    //console.log(sponsorships.min('start_date'))
+
     const getHealthStatusColor = (status: string) => {
         switch (status?.toLowerCase()) {
             case 'excellent':
