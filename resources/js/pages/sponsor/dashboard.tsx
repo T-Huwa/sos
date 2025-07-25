@@ -110,7 +110,7 @@ export default function Dashboard({ campaigns = [] }: Props) {
 
                 {/* Stats Cards */}
                 <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-                    <Card>
+                    {/* <Card>
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -120,9 +120,9 @@ export default function Dashboard({ campaigns = [] }: Props) {
                                 <Star className="h-8 w-8 text-purple-600" />
                             </div>
                         </CardContent>
-                    </Card>
+                    </Card> */}
 
-                    <Card>
+                    {/* <Card>
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -134,8 +134,8 @@ export default function Dashboard({ campaigns = [] }: Props) {
                                 <TrendingUp className="h-8 w-8 text-green-600" />
                             </div>
                         </CardContent>
-                    </Card>
-
+                    </Card> */}
+{/* 
                     <Card>
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
@@ -151,9 +151,9 @@ export default function Dashboard({ campaigns = [] }: Props) {
                                 <BookOpen className="h-8 w-8 text-blue-600" />
                             </div>
                         </CardContent>
-                    </Card>
+                    </Card> */}
 
-                    <Card>
+                    {/* <Card>
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -163,7 +163,7 @@ export default function Dashboard({ campaigns = [] }: Props) {
                                 <Mail className="h-8 w-8 text-orange-600" />
                             </div>
                         </CardContent>
-                    </Card>
+                    </Card> */}
                 </div>
 
                 {/* Active Campaigns Section */}
@@ -188,7 +188,6 @@ export default function Dashboard({ campaigns = [] }: Props) {
                                             </Badge>
                                             <span className="text-xs text-gray-500">{campaign.created_at}</span>
                                         </div>
-                                        <h4 className="mb-2 font-medium text-gray-900">{campaign.created_by}'s Campaign</h4>
                                         <p className="mb-3 text-sm leading-relaxed text-gray-600">
                                             {campaign.message.length > 80 ? campaign.message.substring(0, 80) + '...' : campaign.message}
                                         </p>

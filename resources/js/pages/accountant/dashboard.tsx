@@ -57,7 +57,7 @@ export default function DashboardPage({ dashboardData }: Props) {
                                         {dashboardData.donationChange}% from last month
                                     </p>
                                 </div>
-                                <DollarSign className="h-8 w-8 text-purple-600" />
+                                {/* <DollarSign className="h-8 w-8 text-purple-600" /> */}
                             </div>
                         </CardContent>
                     </Card>

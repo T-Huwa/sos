@@ -304,7 +304,7 @@ export default function DonateToCampaignPage({ campaign }: Props) {
                                 <Tabs value={activeTab} onValueChange={setActiveTab}>
                                     <TabsList className="grid w-full grid-cols-2">
                                         <TabsTrigger value="cash" className="flex items-center gap-2">
-                                            <DollarSign className="h-4 w-4" />
+                                            {/* <DollarSign className="h-4 w-4" /> */}
                                             Cash Donation
                                         </TabsTrigger>
                                         <TabsTrigger value="items" className="flex items-center gap-2">

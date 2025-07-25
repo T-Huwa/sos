@@ -311,7 +311,6 @@ export default function DonorDashboard() {
                                             </Badge>
                                             <span className="text-xs text-gray-500">{campaign.created_at}</span>
                                         </div>
-                                        <h4 className="mb-2 font-medium text-gray-900">{campaign.created_by}'s Campaign</h4>
                                         <p className="mb-3 text-sm leading-relaxed text-gray-600">
                                             {campaign.message.length > 80 ? campaign.message.substring(0, 80) + '...' : campaign.message}
                                         </p>

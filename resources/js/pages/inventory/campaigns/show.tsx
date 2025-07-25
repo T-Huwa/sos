@@ -297,7 +297,7 @@ export default function ShowCampaignPage({ campaign }: Props) {
                                                     MWK {campaign.statistics.total_cash_amount.toLocaleString()}
                                                 </p>
                                             </div>
-                                            <DollarSign className="h-8 w-8 text-green-600" />
+                                            {/* <DollarSign className="h-8 w-8 text-green-600" /> */}
                                         </div>
                                     </CardContent>
                                 </Card>

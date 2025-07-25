@@ -56,7 +56,7 @@ export default function ChildrenPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="mb-4 flex items-center justify-between">
-                        <CreateChildModal />
+                        {/* <CreateChildModal /> */}
                         <Button variant="outline">Export Data</Button>
                     </div>
                     <Table>
