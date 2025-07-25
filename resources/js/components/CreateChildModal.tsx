@@ -24,6 +24,29 @@ export default function CreateChildModal({ submitUrl = '/children' }: CreateChil
     const [isLoading, setIsLoading] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
 
+    // Function to refresh CSRF token
+    const refreshCSRFToken = async () => {
+        try {
+            const response = await fetch('/csrf-token', {
+                method: 'GET',
+                credentials: 'same-origin',
+            });
+            if (response.ok) {
+                const data = await response.json();
+                // Update the meta tag with new token
+                const metaTag = document.querySelector('meta[name="csrf-token"]');
+                if (metaTag && data.token) {
+                    metaTag.setAttribute('content', data.token);
+                    console.log('CSRF token refreshed');
+                    return true;
+                }
+            }
+        } catch (error) {
+            console.error('Failed to refresh CSRF token:', error);
+        }
+        return false;
+    };
+
     const handleChange = (e: any) => {
         const { name, value, files } = e.target;
         if (files) {
@@ -168,6 +191,13 @@ export default function CreateChildModal({ submitUrl = '/children' }: CreateChil
 
                     // Handle specific HTTP status codes
                     if (response.status === 419) {
+                        // CSRF token mismatch - try to refresh and retry
+                        const tokenRefreshed = await refreshCSRFToken();
+                        if (tokenRefreshed && retryCount < 1) {
+                            console.log('CSRF token refreshed, retrying...');
+                            setTimeout(() => handleSubmit(retryCount + 1), 500);
+                            return;
+                        }
                         errorMessage = 'Session expired. Please refresh the page and try again.';
                     } else if (response.status === 422) {
                         errorMessage = 'Validation failed. Please check your input and try again.';
@@ -206,7 +236,7 @@ export default function CreateChildModal({ submitUrl = '/children' }: CreateChil
             <DialogTrigger asChild>
                 <Button>Add New Child</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-h-screen max-w-lg overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Add New Child</DialogTitle>
                 </DialogHeader>
@@ -309,7 +339,7 @@ export default function CreateChildModal({ submitUrl = '/children' }: CreateChil
                     </div>
 
                     <div className="flex gap-2 pt-4">
-                        <Button onClick={handleSubmit} disabled={isLoading} className="flex-1">
+                        <Button onClick={() => handleSubmit()} disabled={isLoading} className="flex-1">
                             {isLoading ? 'Adding...' : 'Add Child'}
                         </Button>
                         <Button variant="outline" onClick={() => setIsOpen(false)} disabled={isLoading}>

@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ArrowLeft, DollarSign, Gift, Heart, Plus, User, X } from 'lucide-react';
+import { ArrowLeft, Gift, Heart, Plus, User, X } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -23,6 +23,12 @@ interface Campaign {
     created_at: string;
     created_by: string;
     images: CampaignImage[];
+    target_amount?: number;
+    total_raised: number;
+    progress_percentage: number;
+    remaining_amount: number;
+    is_goal_reached: boolean;
+    is_completed: boolean;
 }
 
 interface Props {
@@ -275,6 +281,46 @@ export default function AuthenticatedDonateToCampaignPage({ campaign }: Props) {
                                     <div>
                                         <p className="leading-relaxed whitespace-pre-wrap text-gray-700">{campaign.message}</p>
                                     </div>
+
+                                    {/* Progress Bar */}
+                                    {campaign.target_amount && (
+                                        <div className="space-y-3 rounded-lg bg-gray-50 p-4">
+                                            <div className="flex items-center justify-between">
+                                                <h4 className="font-semibold text-gray-900">Campaign Progress</h4>
+                                                {campaign.is_completed && (
+                                                    <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+                                                        Goal Reached!
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="text-gray-600">Progress</span>
+                                                    <span className={`font-medium ${campaign.is_completed ? 'text-green-600' : 'text-blue-600'}`}>
+                                                        {campaign.progress_percentage.toFixed(1)}%
+                                                    </span>
+                                                </div>
+                                                <div className="h-2 w-full rounded-full bg-gray-200">
+                                                    <div
+                                                        className={`h-2 rounded-full transition-all duration-300 ${
+                                                            campaign.is_completed ? 'bg-green-500' : 'bg-blue-500'
+                                                        }`}
+                                                        style={{ width: `${Math.min(campaign.progress_percentage, 100)}%` }}
+                                                    />
+                                                </div>
+                                                <div className="flex justify-between text-sm text-gray-600">
+                                                    <span>MWK {campaign.total_raised.toLocaleString()} raised</span>
+                                                    <span>MWK {campaign.target_amount.toLocaleString()} goal</span>
+                                                </div>
+                                                {!campaign.is_completed && (
+                                                    <p className="text-sm text-gray-500">
+                                                        MWK {campaign.remaining_amount.toLocaleString()} remaining to reach goal
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {campaign.images.length > 0 && (
                                         <div className="grid grid-cols-2 gap-2">
                                             {campaign.images.slice(0, 4).map((image) => (

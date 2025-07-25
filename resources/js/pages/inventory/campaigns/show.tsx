@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ArrowLeft, Calendar, DollarSign, Gift, Image as ImageIcon, Package, Share2, TrendingUp, User } from 'lucide-react';
+import { ArrowLeft, Calendar, Gift, Image as ImageIcon, Package, Share2, TrendingUp, User } from 'lucide-react';
 import { useState } from 'react';
 
 interface CampaignImage {
@@ -335,7 +335,7 @@ export default function ShowCampaignPage({ campaign }: Props) {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>Donor</TableHead>
-                                            <TableHead>Items</TableHead>
+                                            <TableHead>Amount/Items</TableHead>
                                             <TableHead>Status</TableHead>
                                             <TableHead>Date</TableHead>
                                             <TableHead>Message</TableHead>
@@ -353,12 +353,16 @@ export default function ShowCampaignPage({ campaign }: Props) {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <div>
-                                                        <p className="font-medium">{donation.items.length} item(s)</p>
-                                                        <p className="text-sm text-gray-500">
-                                                            {donation.items.reduce((sum, item) => sum + item.quantity, 0)} total qty
-                                                        </p>
-                                                    </div>
+                                                    {donation.donation_type === 'money' ? (
+                                                        <span className="font-medium text-green-600">MWK {donation.amount?.toLocaleString()}</span>
+                                                    ) : (
+                                                        <div>
+                                                            <p className="font-medium">{donation.items.length} item(s)</p>
+                                                            <p className="text-sm text-gray-500">
+                                                                {donation.items.reduce((sum, item) => sum + item.quantity, 0)} total qty
+                                                            </p>
+                                                        </div>
+                                                    )}
                                                 </TableCell>
                                                 <TableCell>
                                                     <Badge variant={donation.status === 'received' ? 'default' : 'secondary'}>

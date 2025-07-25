@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 use App\Models\Child;
@@ -20,6 +21,11 @@ use App\Http\Controllers\{
     AccountantController,
     InventoryManagerController
 };
+
+// CSRF token refresh route
+Route::get('/csrf-token', function () {
+    return response()->json(['token' => csrf_token()]);
+});
 
 Route::get('/', function () {
     $campaigns = \App\Models\DonationCampaign::with(['images', 'creator'])
@@ -266,6 +272,22 @@ Route::post('/donations/webhook', [DonationController::class, 'handleWebhook']);
 // Campaign donation routes (public)
 Route::get('/campaigns/{campaign}/donate', [CampaignDonationController::class, 'show'])->name('campaigns.donate');
 Route::post('/campaigns/{campaign}/donate/anonymous', [CampaignDonationController::class, 'storeAnonymous'])->name('campaigns.donate.anonymous');
+Route::post('/campaigns/{campaign}/donate', [CampaignDonationController::class, 'store'])->middleware('auth');
+
+// Debug route for testing anonymous donations
+Route::post('/campaigns/{campaign}/donate/test', function (Request $request, \App\Models\DonationCampaign $campaign) {
+    return response()->json([
+        'success' => true,
+        'campaign_id' => $campaign->id,
+        'request_data' => $request->all(),
+        'validation_test' => [
+            'donation_type' => $request->input('donation_type'),
+            'anonymous_name' => $request->input('anonymous_name'),
+            'anonymous_email' => $request->input('anonymous_email'),
+            'amount' => $request->input('amount'),
+        ]
+    ]);
+});
 
 // Authenticated campaign donation route
 Route::get('/campaigns/{campaign}/donate-authenticated', function (\App\Models\DonationCampaign $campaign) {
@@ -277,6 +299,12 @@ Route::get('/campaigns/{campaign}/donate-authenticated', function (\App\Models\D
             'message' => $campaign->message,
             'created_at' => $campaign->created_at->format('F d, Y'),
             'created_by' => $campaign->creator->name,
+            'target_amount' => $campaign->target_amount,
+            'total_raised' => $campaign->total_raised,
+            'progress_percentage' => $campaign->progress_percentage,
+            'remaining_amount' => $campaign->remaining_amount,
+            'is_goal_reached' => $campaign->is_goal_reached,
+            'is_completed' => $campaign->is_completed,
             'images' => $campaign->images->map(function ($image) {
                 return [
                     'id' => $image->id,

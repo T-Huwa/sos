@@ -19,7 +19,7 @@ const AnonymousDonationForm: React.FC = () => {
     const [loading, setLoading] = useState(false);
 
     // Anonymous donor information
-    const [donorName, setDonorName] = useState('');
+    const [donorName, setDonorName] = useState('Anonymous donor');
     const [donorEmail, setDonorEmail] = useState('');
 
     // Item donation fields
@@ -208,7 +208,7 @@ const AnonymousDonationForm: React.FC = () => {
                             <Input
                                 id="donorName"
                                 placeholder="Enter your name"
-                                value={'Anonymous donor'}
+                                value={donorName}
                                 onChange={(e) => setDonorName(e.target.value)}
                                 disabled={loading}
                                 required

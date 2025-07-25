@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Calendar, DollarSign, Gift, Image as ImageIcon, User } from 'lucide-react';
+import { ArrowLeft, Calendar, Gift, Image as ImageIcon, User } from 'lucide-react';
 import { useState } from 'react';
 
 interface CampaignImage {
@@ -250,7 +250,7 @@ export default function ShowCampaignPage({ campaign }: Props) {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>Donor</TableHead>
-                                            <TableHead>Amount</TableHead>
+                                            <TableHead>Amount/Items</TableHead>
                                             <TableHead>Status</TableHead>
                                             <TableHead>Date</TableHead>
                                             <TableHead>Message</TableHead>
@@ -258,7 +258,6 @@ export default function ShowCampaignPage({ campaign }: Props) {
                                     </TableHeader>
                                     <TableBody>
                                         {campaign.donations.map((donation) => {
-                                            if (donation.donation_type === 'money') return null;
                                             return (
                                                 <TableRow key={donation.id}>
                                                     <TableCell>
@@ -270,7 +269,13 @@ export default function ShowCampaignPage({ campaign }: Props) {
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <span className="font-medium text-green-600">MWK {donation.amount?.toLocaleString()}</span>
+                                                        {donation.donation_type === 'money' ? (
+                                                            <span className="font-medium text-green-600">
+                                                                MWK {donation.amount?.toLocaleString()}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="font-medium text-blue-600">Items</span>
+                                                        )}
                                                     </TableCell>
                                                     <TableCell>
                                                         <Badge variant={donation.status === 'received' ? 'default' : 'secondary'}>

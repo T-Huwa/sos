@@ -24,6 +24,12 @@ class CampaignDonationController extends Controller
                 'message' => $campaign->message,
                 'created_at' => $campaign->created_at->format('F d, Y'),
                 'created_by' => $campaign->creator->name,
+                'target_amount' => $campaign->target_amount,
+                'total_raised' => $campaign->total_raised,
+                'progress_percentage' => $campaign->progress_percentage,
+                'remaining_amount' => $campaign->remaining_amount,
+                'is_goal_reached' => $campaign->is_goal_reached,
+                'is_completed' => $campaign->is_completed,
                 'images' => $campaign->images->map(function ($image) {
                     return [
                         'id' => $image->id,
@@ -68,21 +74,42 @@ class CampaignDonationController extends Controller
 
     public function storeAnonymous(Request $request, DonationCampaign $campaign)
     {
-        $validated = $request->validate([
-            'donation_type' => 'required|in:cash,items',
-            'anonymous_name' => 'required|string|max:255',
-            'anonymous_email' => 'required|email|max:255',
-            'message' => 'nullable|string|max:1000',
-
-            // Cash donation fields
-            'amount' => 'required_if:donation_type,cash|numeric|min:100',
-
-            // Item donation fields
-            'items' => 'required_if:donation_type,items|array|min:1',
-            'items.*.name' => 'required|string|max:255',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.description' => 'nullable|string|max:500',
+        // Log the request data for debugging
+        \Log::info('Anonymous campaign donation request:', [
+            'campaign_id' => $campaign->id,
+            'campaign_exists' => $campaign->exists,
+            'request_data' => $request->all(),
+            'headers' => $request->headers->all(),
+            'url' => $request->url(),
+            'method' => $request->method()
         ]);
+
+        try {
+            $validated = $request->validate([
+                'donation_type' => 'required|in:cash,items',
+                'anonymous_name' => 'required|string|min:1|max:255',
+                'anonymous_email' => 'required|email|max:255',
+                'message' => 'nullable|string|max:1000',
+
+                // Cash donation fields
+                'amount' => 'required_if:donation_type,cash|numeric|min:100',
+
+                // Item donation fields
+                'items' => 'required_if:donation_type,items|array|min:1',
+                'items.*.name' => 'required|string|max:255',
+                'items.*.quantity' => 'required|integer|min:1',
+                'items.*.description' => 'nullable|string|max:500',
+            ]);
+
+            \Log::info('Anonymous campaign donation validation passed:', $validated);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Anonymous campaign donation validation failed:', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all()
+            ]);
+            throw $e;
+        }
 
         try {
             DB::beginTransaction();
@@ -92,9 +119,18 @@ class CampaignDonationController extends Controller
             } else {
                 return $this->handleAnonymousItemDonation($validated, $campaign);
             }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Anonymous campaign donation validation failed:', $e->errors());
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Anonymous campaign donation failed: ' . $e->getMessage());
+            Log::error('Anonymous campaign donation failed: ' . $e->getMessage(), [
+                'request_data' => $request->all(),
+                'campaign_id' => $campaign->id
+            ]);
             return response()->json(['message' => 'Donation failed. Please try again.'], 500);
         }
     }
@@ -103,14 +139,14 @@ class CampaignDonationController extends Controller
     {
         $user = Auth::user();
 
-        // Create donation record
+        // Create donation record - mark as received immediately since payment gateway can't reach server
         $donation = Donation::create([
             'user_id' => $user->id,
             'campaign_id' => $campaign->id,
             'donation_type' => 'money',
             'amount' => $validated['amount'],
             'description' => $validated['message'],
-            'status' => 'pending',
+            'status' => 'received', // Mark as received immediately
             'checkout_ref' => 'campaign-' . $campaign->id . '-' . time() . '-' . Str::random(8),
         ]);
 
@@ -161,14 +197,14 @@ class CampaignDonationController extends Controller
 
     private function handleAnonymousCashDonation(array $validated, DonationCampaign $campaign)
     {
-        // Create donation record
+        // Create donation record - mark as received immediately since payment gateway can't reach server
         $donation = Donation::create([
             'user_id' => null,
             'campaign_id' => $campaign->id,
             'donation_type' => 'money',
             'amount' => $validated['amount'],
             'description' => $validated['message'],
-            'status' => 'pending',
+            'status' => 'received', // Mark as received immediately
             'is_anonymous' => true,
             'anonymous_name' => $validated['anonymous_name'],
             'anonymous_email' => $validated['anonymous_email'],
