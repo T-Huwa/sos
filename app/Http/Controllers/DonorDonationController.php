@@ -113,8 +113,9 @@ class DonorDonationController extends Controller
                 ->count(),
         ];
 
-        // Get active campaigns for the dashboard
-        $campaigns = \App\Models\DonationCampaign::with(['images'])
+        // Get active campaigns for the dashboard (only incomplete campaigns)
+        $campaigns = \App\Models\DonationCampaign::with(['images', 'creator'])
+            ->where('is_completed', false)
             ->latest()
             ->take(3)
             ->get()
@@ -126,6 +127,11 @@ class DonorDonationController extends Controller
                     'created_by' => $campaign->creator->name,
                     'first_image' => $campaign->images->first()?->image_url,
                     'images_count' => $campaign->images->count(),
+                    'target_amount' => $campaign->target_amount,
+                    'total_raised' => $campaign->total_raised,
+                    'progress_percentage' => $campaign->progress_percentage,
+                    'remaining_amount' => $campaign->remaining_amount,
+                    'is_goal_reached' => $campaign->is_goal_reached,
                 ];
             });
 

@@ -1,11 +1,11 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { Calendar, MessageSquare, Plus, Search, User, Image } from 'lucide-react';
+import { Calendar, Image, MessageSquare, Plus, Search, User } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 interface Campaign {
@@ -15,6 +15,12 @@ interface Campaign {
     created_by: string;
     images_count: number;
     first_image?: string;
+    target_amount?: number;
+    total_raised: number;
+    progress_percentage: number;
+    remaining_amount: number;
+    is_goal_reached: boolean;
+    is_completed: boolean;
 }
 
 interface Props {
@@ -101,12 +107,13 @@ export default function CampaignsIndexPage({ campaigns }: Props) {
                                 <div>
                                     <p className="text-sm font-medium text-gray-600">This Month</p>
                                     <p className="text-2xl font-bold text-purple-600">
-                                        {campaigns.filter(campaign => {
-                                            const campaignDate = new Date(campaign.created_at);
-                                            const now = new Date();
-                                            return campaignDate.getMonth() === now.getMonth() && 
-                                                   campaignDate.getFullYear() === now.getFullYear();
-                                        }).length}
+                                        {
+                                            campaigns.filter((campaign) => {
+                                                const campaignDate = new Date(campaign.created_at);
+                                                const now = new Date();
+                                                return campaignDate.getMonth() === now.getMonth() && campaignDate.getFullYear() === now.getFullYear();
+                                            }).length
+                                        }
                                     </p>
                                 </div>
                                 <Calendar className="h-8 w-8 text-purple-600" />
@@ -123,7 +130,7 @@ export default function CampaignsIndexPage({ campaigns }: Props) {
                     <CardContent>
                         <div className="flex gap-4">
                             <div className="relative flex-1">
-                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                 <Input
                                     placeholder="Search by message or creator..."
                                     value={searchTerm}
@@ -138,14 +145,10 @@ export default function CampaignsIndexPage({ campaigns }: Props) {
                 {/* Campaigns Grid */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {filteredCampaigns.map((campaign) => (
-                        <Card key={campaign.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                        <Card key={campaign.id} className="overflow-hidden transition-shadow hover:shadow-lg">
                             {campaign.first_image && (
                                 <div className="h-48 overflow-hidden">
-                                    <img
-                                        src={campaign.first_image}
-                                        alt="Campaign"
-                                        className="h-full w-full object-cover"
-                                    />
+                                    <img src={campaign.first_image} alt="Campaign" className="h-full w-full object-cover" />
                                 </div>
                             )}
                             <CardHeader>
@@ -157,9 +160,37 @@ export default function CampaignsIndexPage({ campaigns }: Props) {
                                 </div>
                             </CardHeader>
                             <CardContent>
-                                <p className="mb-4 text-sm text-gray-700 leading-relaxed">
-                                    {truncateMessage(campaign.message)}
-                                </p>
+                                <p className="mb-4 text-sm leading-relaxed text-gray-700">{truncateMessage(campaign.message)}</p>
+
+                                {/* Progress Information */}
+                                {campaign.target_amount && (
+                                    <div className="mb-4 space-y-2">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-gray-600">Goal Progress</span>
+                                            <span className={`font-medium ${campaign.is_completed ? 'text-green-600' : 'text-blue-600'}`}>
+                                                {campaign.progress_percentage.toFixed(1)}%
+                                            </span>
+                                        </div>
+                                        <div className="h-2 w-full rounded-full bg-gray-200">
+                                            <div
+                                                className={`h-2 rounded-full transition-all duration-300 ${
+                                                    campaign.is_completed ? 'bg-green-500' : 'bg-blue-500'
+                                                }`}
+                                                style={{ width: `${Math.min(campaign.progress_percentage, 100)}%` }}
+                                            />
+                                        </div>
+                                        <div className="flex justify-between text-xs text-gray-500">
+                                            <span>MWK {campaign.total_raised.toLocaleString()} raised</span>
+                                            <span>MWK {campaign.target_amount.toLocaleString()} goal</span>
+                                        </div>
+                                        {campaign.is_completed && (
+                                            <Badge variant="default" className="bg-green-100 text-green-800">
+                                                Goal Reached!
+                                            </Badge>
+                                        )}
+                                    </div>
+                                )}
+
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2 text-xs text-gray-500">
                                         <User className="h-3 w-3" />

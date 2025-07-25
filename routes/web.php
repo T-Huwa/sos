@@ -22,7 +22,8 @@ use App\Http\Controllers\{
 };
 
 Route::get('/', function () {
-    $campaigns = \App\Models\DonationCampaign::with(['images'])
+    $campaigns = \App\Models\DonationCampaign::with(['images', 'creator'])
+        ->where('is_completed', false) // Only show incomplete campaigns
         ->latest()
         ->take(3)
         ->get()
@@ -34,6 +35,11 @@ Route::get('/', function () {
                 'created_by' => $campaign->creator->name,
                 'first_image' => $campaign->images->first()?->image_url,
                 'images_count' => $campaign->images->count(),
+                'target_amount' => $campaign->target_amount,
+                'total_raised' => $campaign->total_raised,
+                'progress_percentage' => $campaign->progress_percentage,
+                'remaining_amount' => $campaign->remaining_amount,
+                'is_goal_reached' => $campaign->is_goal_reached,
             ];
         });
 
@@ -129,7 +135,8 @@ Route::middleware(['auth'])->prefix('secretary')->group(function () {
 
 Route::middleware(['auth'])->prefix('sponsor')->group(function () {
     Route::get('/dashboard', function () {
-        $campaigns = \App\Models\DonationCampaign::with(['images'])
+        $campaigns = \App\Models\DonationCampaign::with(['images', 'creator'])
+            ->where('is_completed', false) // Only show incomplete campaigns
             ->latest()
             ->take(3)
             ->get()
@@ -141,6 +148,11 @@ Route::middleware(['auth'])->prefix('sponsor')->group(function () {
                     'created_by' => $campaign->creator->name,
                     'first_image' => $campaign->images->first()?->image_url,
                     'images_count' => $campaign->images->count(),
+                    'target_amount' => $campaign->target_amount,
+                    'total_raised' => $campaign->total_raised,
+                    'progress_percentage' => $campaign->progress_percentage,
+                    'remaining_amount' => $campaign->remaining_amount,
+                    'is_goal_reached' => $campaign->is_goal_reached,
                 ];
             });
 

@@ -13,6 +13,11 @@ interface Campaign {
     created_by: string;
     first_image?: string;
     images_count: number;
+    target_amount?: number;
+    total_raised: number;
+    progress_percentage: number;
+    remaining_amount: number;
+    is_goal_reached: boolean;
 }
 
 interface Props extends SharedData {
@@ -200,6 +205,29 @@ export default function Welcome() {
                                         <p className="mb-4 text-sm leading-relaxed text-gray-700">
                                             {campaign.message.length > 120 ? campaign.message.substring(0, 120) + '...' : campaign.message}
                                         </p>
+
+                                        {/* Progress Bar */}
+                                        {campaign.target_amount && (
+                                            <div className="mb-4 space-y-2">
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="text-gray-600">Progress</span>
+                                                    <span className="font-medium text-green-600">
+                                                        MWK {campaign.total_raised.toLocaleString()} / MWK {campaign.target_amount.toLocaleString()}
+                                                    </span>
+                                                </div>
+                                                <div className="h-2 w-full rounded-full bg-gray-200">
+                                                    <div
+                                                        className="h-2 rounded-full bg-green-500 transition-all duration-300"
+                                                        style={{ width: `${Math.min(campaign.progress_percentage, 100)}%` }}
+                                                    />
+                                                </div>
+                                                <div className="flex justify-between text-xs text-gray-500">
+                                                    <span>{campaign.progress_percentage.toFixed(1)}% funded</span>
+                                                    <span>MWK {campaign.remaining_amount.toLocaleString()} remaining</span>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         <div className="flex gap-2">
                                             <Link href={`/campaigns/${campaign.id}/donate`} className="flex-1">
                                                 <Button className="w-full bg-green-600 hover:bg-green-700">

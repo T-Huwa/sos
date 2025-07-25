@@ -49,6 +49,12 @@ interface Campaign {
     images: CampaignImage[];
     donations: CampaignDonation[];
     statistics: CampaignStatistics;
+    target_amount?: number;
+    total_raised: number;
+    progress_percentage: number;
+    remaining_amount: number;
+    is_goal_reached: boolean;
+    is_completed: boolean;
 }
 
 interface Props {
@@ -224,6 +230,49 @@ export default function ShowCampaignPage({ campaign }: Props) {
                         <CardDescription>Track donations received for this campaign</CardDescription>
                     </CardHeader>
                     <CardContent>
+                        {/* Goal Progress Card */}
+                        {campaign.target_amount && (
+                            <Card className="mb-6">
+                                <CardContent className="p-6">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-lg font-semibold">Campaign Goal Progress</h3>
+                                            {campaign.is_completed && (
+                                                <Badge variant="default" className="bg-green-100 text-green-800">
+                                                    Goal Reached!
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-600">Progress</span>
+                                                <span className={`font-medium ${campaign.is_completed ? 'text-green-600' : 'text-blue-600'}`}>
+                                                    {campaign.progress_percentage.toFixed(1)}%
+                                                </span>
+                                            </div>
+                                            <div className="h-3 w-full rounded-full bg-gray-200">
+                                                <div
+                                                    className={`h-3 rounded-full transition-all duration-300 ${
+                                                        campaign.is_completed ? 'bg-green-500' : 'bg-blue-500'
+                                                    }`}
+                                                    style={{ width: `${Math.min(campaign.progress_percentage, 100)}%` }}
+                                                />
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-600">MWK {campaign.total_raised.toLocaleString()} raised</span>
+                                                <span className="text-gray-600">MWK {campaign.target_amount.toLocaleString()} goal</span>
+                                            </div>
+                                            {!campaign.is_completed && (
+                                                <p className="text-sm text-gray-500">
+                                                    MWK {campaign.remaining_amount.toLocaleString()} remaining to reach goal
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
                         {/* Statistics Cards */}
                         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
                             <Card>

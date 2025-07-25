@@ -44,6 +44,11 @@ interface Campaign {
     created_by: string;
     first_image?: string;
     images_count: number;
+    target_amount?: number;
+    total_raised: number;
+    progress_percentage: number;
+    remaining_amount: number;
+    is_goal_reached: boolean;
 }
 
 interface DashboardData {
@@ -141,7 +146,6 @@ export default function DonorDashboard() {
                     </div>
                 ) : dashboardData ? (
                     <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
-
                         <Card>
                             <CardContent className="p-6">
                                 <div className="flex items-center justify-between">
@@ -311,6 +315,26 @@ export default function DonorDashboard() {
                                         <p className="mb-3 text-sm leading-relaxed text-gray-600">
                                             {campaign.message.length > 80 ? campaign.message.substring(0, 80) + '...' : campaign.message}
                                         </p>
+
+                                        {/* Progress Bar */}
+                                        {campaign.target_amount && (
+                                            <div className="mb-3 space-y-2">
+                                                <div className="flex justify-between text-xs">
+                                                    <span className="text-gray-600">Progress</span>
+                                                    <span className="font-medium text-green-600">{campaign.progress_percentage.toFixed(1)}%</span>
+                                                </div>
+                                                <div className="h-1.5 w-full rounded-full bg-gray-200">
+                                                    <div
+                                                        className="h-1.5 rounded-full bg-green-500 transition-all duration-300"
+                                                        style={{ width: `${Math.min(campaign.progress_percentage, 100)}%` }}
+                                                    />
+                                                </div>
+                                                <div className="text-xs text-gray-500">
+                                                    MWK {campaign.total_raised.toLocaleString()} / MWK {campaign.target_amount.toLocaleString()}
+                                                </div>
+                                            </div>
+                                        )}
+
                                         <Link href={`/campaigns/${campaign.id}/donate-authenticated`}>
                                             <Button size="sm" className="w-full bg-green-600 hover:bg-green-700">
                                                 <Heart className="mr-2 h-4 w-4" />

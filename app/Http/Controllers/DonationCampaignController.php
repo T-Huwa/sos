@@ -24,6 +24,12 @@ class DonationCampaignController extends Controller
                     'created_by' => $campaign->creator->name,
                     'images_count' => $campaign->images->count(),
                     'first_image' => $campaign->images->first()?->image_url,
+                    'target_amount' => $campaign->target_amount,
+                    'total_raised' => $campaign->total_raised,
+                    'progress_percentage' => $campaign->progress_percentage,
+                    'remaining_amount' => $campaign->remaining_amount,
+                    'is_goal_reached' => $campaign->is_goal_reached,
+                    'is_completed' => $campaign->is_completed,
                 ];
             });
 
@@ -41,12 +47,14 @@ class DonationCampaignController extends Controller
     {
         $validated = $request->validate([
             'message' => 'required|string|min:10',
+            'target_amount' => 'nullable|numeric|min:0',
             'images' => 'required|array|min:1|max:10',
             // 'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $campaign = DonationCampaign::create([
             'message' => $validated['message'],
+            'target_amount' => $validated['target_amount'] ?: null,
             'created_by' => Auth::id(),
         ]);
 
@@ -83,6 +91,12 @@ class DonationCampaignController extends Controller
                 'message' => $campaign->message,
                 'created_at' => $campaign->created_at->format('F d, Y \a\t g:i A'),
                 'created_by' => $campaign->creator->name,
+                'target_amount' => $campaign->target_amount,
+                'total_raised' => $campaign->total_raised,
+                'progress_percentage' => $campaign->progress_percentage,
+                'remaining_amount' => $campaign->remaining_amount,
+                'is_goal_reached' => $campaign->is_goal_reached,
+                'is_completed' => $campaign->is_completed,
                 'images' => $campaign->images->map(function ($image) {
                     return [
                         'id' => $image->id,

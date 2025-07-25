@@ -340,21 +340,73 @@ class ChildController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'first_name' => 'required|string',
-            'last_name' => 'required|string',
-            'image' => 'required|image',
-            'date_of_birth' => 'required|date',
-            'gender' => 'required|in:male,female,other',
-            'health_status' => 'nullable|string',
-            'education_level' => 'nullable|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'image' => 'required|image|mimes:jpeg,jpg,png,gif|max:5120', // 5MB max
+                'date_of_birth' => 'required|date|before:today',
+                'gender' => 'required|in:male,female,other',
+                'health_status' => 'nullable|string|max:255',
+                'education_level' => 'nullable|string|max:255',
+                'last_location' => 'nullable|string|max:255',
+            ]);
 
-        $validated['image'] = $request->file('image')->store('children', 'public') || '';
+            // Handle file upload with error checking
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
 
-        Child::create($validated);
+                if ($file->isValid()) {
+                    $path = $file->store('children', 'public');
+                    if (!$path) {
+                        return response()->json([
+                            'message' => 'Failed to upload image. Please try again.',
+                            'error' => 'file_upload_failed'
+                        ], 500);
+                    }
+                    $validated['image'] = $path;
+                } else {
+                    return response()->json([
+                        'message' => 'Invalid image file. Please select a valid image.',
+                        'error' => 'invalid_file'
+                    ], 422);
+                }
+            }
 
-        return redirect()->back()->with('success', 'Child added successfully!');
+            $child = Child::create($validated);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Child added successfully!',
+                    'child' => $child
+                ], 201);
+            }
+
+            return redirect()->back()->with('success', 'Child added successfully!');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            \Log::error('Child creation failed: ' . $e->getMessage(), [
+                'request_data' => $request->except(['image']),
+                'error' => $e->getTraceAsString()
+            ]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'An error occurred while creating the child. Please try again.',
+                    'error' => 'creation_failed'
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Failed to add child. Please try again.');
+        }
     }
 
     public function update(Request $request, $id)

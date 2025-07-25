@@ -3,11 +3,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { Eye, Search } from 'lucide-react';
+import { Eye, Filter, Search } from 'lucide-react';
 import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -26,6 +27,7 @@ interface Child {
     date_of_birth?: string;
     gender?: string;
     location?: string;
+    last_location?: string;
     school?: string;
     grade?: string;
     health_status?: string;
@@ -39,13 +41,34 @@ interface Props {
 
 export default function SecretaryChildren({ children }: Props) {
     const [searchTerm, setSearchTerm] = useState('');
+    const [healthFilter, setHealthFilter] = useState<string>('all');
 
-    const filteredChildren = children.filter(
-        (child) =>
+    const filteredChildren = children.filter((child) => {
+        // Search filter
+        const matchesSearch =
             `${child.first_name} ${child.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
             child.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            child.school?.toLowerCase().includes(searchTerm.toLowerCase()),
-    );
+            child.school?.toLowerCase().includes(searchTerm.toLowerCase());
+
+        // Health filter
+        const matchesHealth =
+            healthFilter === 'all' ||
+            (healthFilter === 'unhealthy' &&
+                (!child.health_status ||
+                    child.health_status.toLowerCase().includes('sick') ||
+                    child.health_status.toLowerCase().includes('ill') ||
+                    child.health_status.toLowerCase().includes('poor') ||
+                    child.health_status.toLowerCase().includes('critical'))) ||
+            (healthFilter === 'healthy' &&
+                child.health_status &&
+                !child.health_status.toLowerCase().includes('sick') &&
+                !child.health_status.toLowerCase().includes('ill') &&
+                !child.health_status.toLowerCase().includes('poor') &&
+                !child.health_status.toLowerCase().includes('critical')) ||
+            (healthFilter === 'no_status' && !child.health_status);
+
+        return matchesSearch && matchesHealth;
+    });
 
     const getStatusBadge = (status?: string) => {
         if (!status) return <Badge variant="secondary">Unknown</Badge>;
@@ -110,6 +133,20 @@ export default function SecretaryChildren({ children }: Props) {
                                         className="pl-10"
                                     />
                                 </div>
+                                <div className="flex items-center space-x-2">
+                                    <Filter className="h-4 w-4 text-muted-foreground" />
+                                    <Select value={healthFilter} onValueChange={setHealthFilter}>
+                                        <SelectTrigger className="w-48">
+                                            <SelectValue placeholder="Filter by health" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Children</SelectItem>
+                                            <SelectItem value="unhealthy">Not Healthy</SelectItem>
+                                            <SelectItem value="healthy">Healthy</SelectItem>
+                                            <SelectItem value="no_status">No Health Status</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                                 <Button variant="outline">Export Data</Button>
                             </div>
 
@@ -157,6 +194,7 @@ export default function SecretaryChildren({ children }: Props) {
                                             <TableHead>Age</TableHead>
                                             <TableHead>Gender</TableHead>
                                             <TableHead>Location</TableHead>
+                                            <TableHead>Last Location</TableHead>
                                             <TableHead>School</TableHead>
                                             <TableHead>Health Status</TableHead>
                                             <TableHead>Actions</TableHead>
@@ -172,6 +210,7 @@ export default function SecretaryChildren({ children }: Props) {
                                                     <TableCell>{child.age || calculateAge(child.date_of_birth)}</TableCell>
                                                     <TableCell className="capitalize">{child.gender || 'Unknown'}</TableCell>
                                                     <TableCell>{child.location || 'Not specified'}</TableCell>
+                                                    <TableCell>{child.last_location || 'Not specified'}</TableCell>
                                                     <TableCell>{child.school || 'Not specified'}</TableCell>
                                                     <TableCell>{getStatusBadge(child.health_status)}</TableCell>
                                                     <TableCell>
@@ -186,7 +225,7 @@ export default function SecretaryChildren({ children }: Props) {
                                             ))
                                         ) : (
                                             <TableRow>
-                                                <TableCell colSpan={7} className="py-8 text-center">
+                                                <TableCell colSpan={8} className="py-8 text-center">
                                                     {searchTerm ? 'No children found matching your search.' : 'No children in the system yet.'}
                                                 </TableCell>
                                             </TableRow>
