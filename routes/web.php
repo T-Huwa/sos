@@ -233,6 +233,13 @@ Route::middleware(['auth'])->prefix('inventory')->group(function () {
     Route::get('/inventory', [ChildController::class, 'getInventory'])->name('inventory.inventory');
     Route::get('/reports', fn () => Inertia::render('inventory/reports'))->name('inventory.reports');
 
+    // Mass requisition routes
+    Route::get('/mass-requisition', [InventoryManagerController::class, 'showMassRequisition'])->name('inventory.mass-requisition');
+    Route::post('/mass-requisition', [InventoryManagerController::class, 'processMassRequisition'])->name('inventory.mass-requisition.process');
+
+    // Individual item quantity adjustment
+    Route::post('/adjust-quantity', [InventoryManagerController::class, 'adjustQuantity'])->name('inventory.adjust-quantity');
+
     // Campaign routes
     Route::get('/campaigns', [DonationCampaignController::class, 'index'])->name('inventory.campaigns.index');
     Route::get('/campaigns/create', [DonationCampaignController::class, 'create'])->name('inventory.campaigns.create');

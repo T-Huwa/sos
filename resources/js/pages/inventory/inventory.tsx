@@ -1,3 +1,4 @@
+import InventoryItemModal from '@/components/InventoryItemModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,11 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
-import { AlertTriangle, Calendar, CheckCircle, MapPin, Package, Search, XCircle } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Head, usePage } from '@inertiajs/react';
+import { AlertTriangle, Calendar, CheckCircle, MapPin, Package, Plus, Search, XCircle } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 interface InventoryItem {
+    id: number;
     item_name: string;
     total_quantity: number;
     category: string;
@@ -50,6 +53,29 @@ export default function InventoryPage({ inventoryItems, statistics }: Props) {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [categoryFilter, setCategoryFilter] = useState<string>('all');
+    const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const { props } = usePage();
+
+    // Handle flash messages
+    useEffect(() => {
+        if (props.success) {
+            toast.success(props.success.message);
+        }
+        if (props.error) {
+            toast.error(props.error.message);
+        }
+    }, [props.success, props.error]);
+
+    const openModal = (item: InventoryItem) => {
+        setSelectedItem(item);
+        setIsModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setSelectedItem(null);
+        setIsModalOpen(false);
+    };
 
     const filteredItems = useMemo(() => {
         return inventoryItems.filter((item) => {
@@ -107,9 +133,17 @@ export default function InventoryPage({ inventoryItems, statistics }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Inventory Management" />
             <div className="container mx-auto px-4 py-8">
-                <div className="mb-8">
-                    <h1 className="mb-2 text-3xl font-bold text-gray-900">Inventory Management</h1>
-                    <p className="text-gray-600">Monitor stock levels and manage donated items</p>
+                <div className="mb-8 flex items-center justify-between">
+                    <div>
+                        <h1 className="mb-2 text-3xl font-bold text-gray-900">Inventory Management</h1>
+                        <p className="text-gray-600">Monitor stock levels and manage donated items</p>
+                    </div>
+                    <a href="/inventory/mass-requisition">
+                        <Button className="flex items-center gap-2">
+                            <Plus className="h-4 w-4" />
+                            Mass Requisition
+                        </Button>
+                    </a>
                 </div>
 
                 {/* Statistics Cards */}
@@ -220,6 +254,9 @@ export default function InventoryPage({ inventoryItems, statistics }: Props) {
                     </TabsContent>
                 </Tabs>
             </div>
+
+            {/* Inventory Item Modal */}
+            <InventoryItemModal item={selectedItem} isOpen={isModalOpen} onClose={closeModal} />
         </AppLayout>
     );
 }
@@ -338,6 +375,9 @@ function InventoryTable({ items }: { items: InventoryItem[] }) {
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex gap-2">
+                                        <Button variant="outline" size="sm" onClick={() => openModal(item)}>
+                                            Edit
+                                        </Button>
                                         <Button variant="outline" size="sm">
                                             Distribute
                                         </Button>

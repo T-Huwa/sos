@@ -54,6 +54,10 @@ const AnonymousDonationForm: React.FC = () => {
             toast.error('Please enter your name.');
             return false;
         }
+        if (donorName.length > 255) {
+            toast.error('Name is too long (max 255 characters).');
+            return false;
+        }
         if (!donorEmail.trim()) {
             toast.error('Please enter your email.');
             return false;
@@ -62,10 +66,18 @@ const AnonymousDonationForm: React.FC = () => {
             toast.error('Please enter a valid email address.');
             return false;
         }
+        if (donorEmail.length > 255) {
+            toast.error('Email is too long (max 255 characters).');
+            return false;
+        }
 
         if (donationType === 'cash') {
             if (!amount || parseFloat(amount) <= 0) {
                 toast.error('Please enter a valid donation amount.');
+                return false;
+            }
+            if (parseFloat(amount) < 100) {
+                toast.error('Minimum donation amount is MWK 100.');
                 return false;
             }
         } else {
@@ -74,7 +86,32 @@ const AnonymousDonationForm: React.FC = () => {
                 toast.error('Please add at least one item with a name and quantity.');
                 return false;
             }
+
+            // Validate each item more thoroughly
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                if (item.name.trim()) {
+                    if (item.name.length > 255) {
+                        toast.error(`Item #${i + 1} name is too long (max 255 characters).`);
+                        return false;
+                    }
+                    if (item.quantity < 1) {
+                        toast.error(`Item #${i + 1} must have a quantity of at least 1.`);
+                        return false;
+                    }
+                    if (item.description && item.description.length > 500) {
+                        toast.error(`Item #${i + 1} description is too long (max 500 characters).`);
+                        return false;
+                    }
+                }
+            }
         }
+
+        if (message && message.length > 1000) {
+            toast.error('Message is too long (max 1000 characters).');
+            return false;
+        }
+
         return true;
     };
 
@@ -131,7 +168,14 @@ const AnonymousDonationForm: React.FC = () => {
                     errorMessages.forEach((error: any) => {
                         toast.error(error);
                     });
+                } else if (res.status === 422) {
+                    // Single validation error message
+                    toast.error(data.message || 'Please check your input and try again.');
+                } else if (res.status === 500) {
+                    // Server error
+                    toast.error('Server error occurred. Please try again later or contact support.');
                 } else {
+                    // Other errors
                     toast.error(data.message || 'Donation failed. Please try again.');
                 }
                 return;

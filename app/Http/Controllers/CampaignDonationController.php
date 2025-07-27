@@ -166,33 +166,117 @@ class CampaignDonationController extends Controller
     {
         $user = Auth::user();
 
-        // Create donation record
-        $donation = Donation::create([
-            'user_id' => $user->id,
-            'campaign_id' => $campaign->id,
-            'donation_type' => 'goods',
-            'amount' => null,
-            'description' => $validated['message'],
-            'status' => 'received', // Item donations are immediately received
-        ]);
+        try {
+            // Validate items array
+            if (empty($validated['items']) || !is_array($validated['items'])) {
+                throw new \InvalidArgumentException('No items provided for donation');
+            }
 
-        // Create donated items
-        foreach ($validated['items'] as $item) {
-            DonatedItem::create([
-                'donation_id' => $donation->id,
-                'item_name' => $item['name'],
-                'quantity' => $item['quantity'],
-                'estimated_value' => null, // Could be added later by admin
+            // Validate each item
+            foreach ($validated['items'] as $index => $item) {
+                if (empty($item['name']) || trim($item['name']) === '') {
+                    throw new \InvalidArgumentException("Item #" . ($index + 1) . " must have a name");
+                }
+                if (!isset($item['quantity']) || $item['quantity'] < 1) {
+                    throw new \InvalidArgumentException("Item #" . ($index + 1) . " must have a valid quantity");
+                }
+                if (strlen($item['name']) > 255) {
+                    throw new \InvalidArgumentException("Item #" . ($index + 1) . " name is too long (max 255 characters)");
+                }
+                if (isset($item['description']) && strlen($item['description']) > 500) {
+                    throw new \InvalidArgumentException("Item #" . ($index + 1) . " description is too long (max 500 characters)");
+                }
+            }
+
+            // Create donation record
+            $donation = Donation::create([
+                'user_id' => $user->id,
+                'campaign_id' => $campaign->id,
+                'donation_type' => 'goods',
+                'amount' => null,
+                'description' => $validated['message'],
+                'status' => 'received', // Item donations are immediately received
             ]);
+
+            if (!$donation) {
+                throw new \Exception('Failed to create donation record');
+            }
+
+            // Create donated items
+            $createdItems = [];
+            foreach ($validated['items'] as $item) {
+                try {
+                    $donatedItem = DonatedItem::create([
+                        'donation_id' => $donation->id,
+                        'item_name' => trim($item['name']),
+                        'quantity' => (int) $item['quantity'],
+                        'estimated_value' => null, // Could be added later by admin
+                    ]);
+
+                    if (!$donatedItem) {
+                        throw new \Exception("Failed to create donated item: {$item['name']}");
+                    }
+
+                    $createdItems[] = $donatedItem;
+                } catch (\Exception $e) {
+                    Log::error('Failed to create donated item (campaign)', [
+                        'donation_id' => $donation->id,
+                        'campaign_id' => $campaign->id,
+                        'item' => $item,
+                        'error' => $e->getMessage()
+                    ]);
+                    throw new \Exception("Failed to save item: {$item['name']}. " . $e->getMessage());
+                }
+            }
+
+            if (empty($createdItems)) {
+                throw new \Exception('No items were successfully saved');
+            }
+
+            DB::commit();
+
+            Log::info('Campaign item donation created successfully', [
+                'donation_id' => $donation->id,
+                'campaign_id' => $campaign->id,
+                'user_id' => $user->id,
+                'items_count' => count($createdItems)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Thank you for your item donation to this campaign! We will contact you soon to arrange pickup.',
+                'donation_id' => $donation->id,
+                'items_count' => count($createdItems)
+            ]);
+
+        } catch (\InvalidArgumentException $e) {
+            DB::rollBack();
+            Log::warning('Campaign item donation validation failed', [
+                'campaign_id' => $campaign->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+                'items' => $validated['items'] ?? []
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 422);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Campaign item donation failed', [
+                'campaign_id' => $campaign->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process your donation. Please try again or contact support.'
+            ], 500);
         }
-
-        DB::commit();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Item donation submitted successfully! Thank you for your generosity.',
-            'donation_id' => $donation->id,
-        ]);
     }
 
     private function handleAnonymousCashDonation(array $validated, DonationCampaign $campaign)
@@ -225,36 +309,128 @@ class CampaignDonationController extends Controller
 
     private function handleAnonymousItemDonation(array $validated, DonationCampaign $campaign)
     {
-        // Create donation record
-        $donation = Donation::create([
-            'user_id' => null,
-            'campaign_id' => $campaign->id,
-            'donation_type' => 'goods',
-            'amount' => null,
-            'description' => $validated['message'],
-            'status' => 'received', // Item donations are immediately received
-            'is_anonymous' => true,
-            'anonymous_name' => $validated['anonymous_name'],
-            'anonymous_email' => $validated['anonymous_email'],
-        ]);
+        try {
+            // Validate items array
+            if (empty($validated['items']) || !is_array($validated['items'])) {
+                throw new \InvalidArgumentException('No items provided for donation');
+            }
 
-        // Create donated items
-        foreach ($validated['items'] as $item) {
-            DonatedItem::create([
-                'donation_id' => $donation->id,
-                'item_name' => $item['name'],
-                'quantity' => $item['quantity'],
-                'estimated_value' => null, // Could be added later by admin
+            // Validate each item
+            foreach ($validated['items'] as $index => $item) {
+                if (empty($item['name']) || trim($item['name']) === '') {
+                    throw new \InvalidArgumentException("Item #" . ($index + 1) . " must have a name");
+                }
+                if (!isset($item['quantity']) || $item['quantity'] < 1) {
+                    throw new \InvalidArgumentException("Item #" . ($index + 1) . " must have a valid quantity");
+                }
+                if (strlen($item['name']) > 255) {
+                    throw new \InvalidArgumentException("Item #" . ($index + 1) . " name is too long (max 255 characters)");
+                }
+                if (isset($item['description']) && strlen($item['description']) > 500) {
+                    throw new \InvalidArgumentException("Item #" . ($index + 1) . " description is too long (max 500 characters)");
+                }
+            }
+
+            // Validate anonymous donor information
+            if (empty($validated['anonymous_name']) || trim($validated['anonymous_name']) === '') {
+                throw new \InvalidArgumentException('Donor name is required');
+            }
+            if (empty($validated['anonymous_email']) || !filter_var($validated['anonymous_email'], FILTER_VALIDATE_EMAIL)) {
+                throw new \InvalidArgumentException('Valid email address is required');
+            }
+
+            // Create donation record
+            $donation = Donation::create([
+                'user_id' => null,
+                'campaign_id' => $campaign->id,
+                'donation_type' => 'goods',
+                'amount' => null,
+                'description' => $validated['message'],
+                'status' => 'received', // Item donations are immediately received
+                'is_anonymous' => true,
+                'anonymous_name' => trim($validated['anonymous_name']),
+                'anonymous_email' => trim($validated['anonymous_email']),
             ]);
+
+            if (!$donation) {
+                throw new \Exception('Failed to create donation record');
+            }
+
+            // Create donated items
+            $createdItems = [];
+            foreach ($validated['items'] as $item) {
+                try {
+                    $donatedItem = DonatedItem::create([
+                        'donation_id' => $donation->id,
+                        'item_name' => trim($item['name']),
+                        'quantity' => (int) $item['quantity'],
+                        'estimated_value' => null, // Could be added later by admin
+                    ]);
+
+                    if (!$donatedItem) {
+                        throw new \Exception("Failed to create donated item: {$item['name']}");
+                    }
+
+                    $createdItems[] = $donatedItem;
+                } catch (\Exception $e) {
+                    Log::error('Failed to create donated item (anonymous campaign)', [
+                        'donation_id' => $donation->id,
+                        'campaign_id' => $campaign->id,
+                        'item' => $item,
+                        'error' => $e->getMessage()
+                    ]);
+                    throw new \Exception("Failed to save item: {$item['name']}. " . $e->getMessage());
+                }
+            }
+
+            if (empty($createdItems)) {
+                throw new \Exception('No items were successfully saved');
+            }
+
+            DB::commit();
+
+            Log::info('Anonymous campaign item donation created successfully', [
+                'donation_id' => $donation->id,
+                'campaign_id' => $campaign->id,
+                'anonymous_name' => $validated['anonymous_name'],
+                'items_count' => count($createdItems)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Thank you for your item donation to this campaign! We will contact you soon to arrange pickup.',
+                'donation_id' => $donation->id,
+                'items_count' => count($createdItems)
+            ]);
+
+        } catch (\InvalidArgumentException $e) {
+            DB::rollBack();
+            Log::warning('Anonymous campaign item donation validation failed', [
+                'campaign_id' => $campaign->id,
+                'anonymous_name' => $validated['anonymous_name'] ?? 'unknown',
+                'error' => $e->getMessage(),
+                'items' => $validated['items'] ?? []
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 422);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Anonymous campaign item donation failed', [
+                'campaign_id' => $campaign->id,
+                'anonymous_name' => $validated['anonymous_name'] ?? 'unknown',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process your donation. Please try again or contact support.'
+            ], 500);
         }
-
-        DB::commit();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Anonymous item donation submitted successfully! Thank you for your generosity.',
-            'donation_id' => $donation->id,
-        ]);
     }
 
     private function generatePayChanguCheckoutUrl($donation)

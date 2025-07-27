@@ -120,6 +120,25 @@ export default function DonorDonatePage() {
                 toast.error('Please add at least one item with a name and quantity.');
                 return false;
             }
+
+            // Validate each item more thoroughly
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                if (item.name.trim()) {
+                    if (item.name.length > 255) {
+                        toast.error(`Item #${i + 1} name is too long (max 255 characters).`);
+                        return false;
+                    }
+                    if (item.quantity < 1) {
+                        toast.error(`Item #${i + 1} must have a quantity of at least 1.`);
+                        return false;
+                    }
+                    if (item.description && item.description.length > 500) {
+                        toast.error(`Item #${i + 1} description is too long (max 500 characters).`);
+                        return false;
+                    }
+                }
+            }
         }
 
         if (donatingToChild && !selectedChildId) {
