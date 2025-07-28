@@ -98,15 +98,18 @@ const AnonymousDonationForm: React.FC = () => {
 
             // Get CSRF token from meta tag
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            console.log(csrfToken)
 
             const res = await fetch('/anonymous-donation', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken || '',
+                    'X-CSRF-TOKEN': csrfToken,
                 },
                 body: JSON.stringify(payload),
             });
+
+            console.log(res);
 
             // Check if response is JSON or text (URL)
             const contentType = res.headers.get('content-type');

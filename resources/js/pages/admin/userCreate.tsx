@@ -60,6 +60,8 @@ export default function UserCreate() {
                                 <SelectContent>
                                     <SelectItem value="admin">Admin</SelectItem>
                                     <SelectItem value="inventory_manager">Inventory Manager</SelectItem>
+                                         <SelectItem value="accountant">Accountant</SelectItem>
+                                    <SelectItem value="secretary">Secretary</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
