@@ -140,10 +140,12 @@ const AnonymousDonationForm: React.FC = () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken || '',
+                    'X-CSRF-TOKEN': csrfToken,
                 },
                 body: JSON.stringify(payload),
             });
+
+            console.log(res);
 
             // Check if response is JSON or text (URL)
             const contentType = res.headers.get('content-type');
