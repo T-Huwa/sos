@@ -397,9 +397,7 @@ function DonationsTable({ donations, isInventoryManager }: { donations: Donation
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {donations.map((donation) => {
-                            if (donation.donation_type === 'goods') return null;
-                            else return;
+                        {donations.map((donation) => (
                             <TableRow key={donation.id} className={successfullyAdded.includes(donation.id) ? 'border-green-200 bg-green-50' : ''}>
                                 <TableCell>
                                     <div className="flex items-center gap-2">
@@ -518,8 +516,8 @@ function DonationsTable({ donations, isInventoryManager }: { donations: Donation
                                         )}
                                     </div>
                                 </TableCell>
-                            </TableRow>;
-                        })}
+                            </TableRow>
+                        ))}
                     </TableBody>
                 </Table>
             </CardContent>

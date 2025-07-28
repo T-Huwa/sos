@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Child;
 use App\Models\Donation;
+use App\Models\InventoryAdjustment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -111,12 +112,28 @@ class ChildController extends Controller
                             continue;
                         }
 
-                        \App\Models\Inventory::create([
+                        $inventory = \App\Models\Inventory::create([
                             'item_name' => $item->item_name,
                             'quantity' => $item->quantity,
                             'category' => $this->categorizeItem($item->item_name),
                             'source_donation_id' => $donation->id,
                             'location' => 'warehouse', // Default location
+                            'threshold' => 20, // Default threshold
+                        ]);
+
+                        // Create adjustment record for donation
+                        InventoryAdjustment::create([
+                            'item_name' => $item->item_name,
+                            'adjustment_type' => 'increase',
+                            'quantity_change' => $item->quantity,
+                            'quantity_before' => 0,
+                            'quantity_after' => $item->quantity,
+                            'reason' => 'Item donation',
+                            'notes' => "Added from donation #{$donation->id}",
+                            'category' => $this->categorizeItem($item->item_name),
+                            'location' => 'warehouse',
+                            'adjusted_by' => auth()->id(),
+                            'source_donation_id' => $donation->id,
                         ]);
 
                         $addedItems[] = [
@@ -192,17 +209,19 @@ class ChildController extends Controller
     public function getInventory()
     {
         $inventoryItems = \App\Models\Inventory::select('item_name', 'category', 'location')
+            ->selectRaw('MIN(id) as id') // Get the first item's ID for the group
             ->selectRaw('SUM(quantity) as total_quantity')
             ->selectRaw('COUNT(DISTINCT source_donation_id) as donation_count')
             ->selectRaw('MIN(created_at) as first_added')
             ->selectRaw('MAX(created_at) as last_updated')
+            ->selectRaw('MAX(threshold) as threshold') // Get the threshold from the items
             ->groupBy('item_name', 'category', 'location')
             ->orderBy('item_name')
             ->get()
             ->map(function ($item) {
                 // Calculate status based on quantity thresholds
                 $status = 'Good';
-                $threshold = 20; // Default threshold
+                $threshold = $item->threshold ?? 20; // Use actual threshold or default
 
                 if ($item->total_quantity <= 5) {
                     $status = 'Critical';
@@ -211,6 +230,7 @@ class ChildController extends Controller
                 }
 
                 return [
+                    'id' => $item->id,
                     'item_name' => $item->item_name,
                     'total_quantity' => $item->total_quantity,
                     'category' => $item->category,
