@@ -120,7 +120,7 @@ export default function InventoryItemModal({ item, isOpen, onClose }: InventoryI
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-h-screen max-w-md overflow-scroll">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Package className="h-5 w-5" />

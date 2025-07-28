@@ -242,15 +242,15 @@ export default function InventoryPage({ inventoryItems, statistics }: Props) {
                     </div>
 
                     <TabsContent value="all">
-                        <InventoryTable items={filteredItems} />
+                        <InventoryTable items={filteredItems} onEdit={openModal} />
                     </TabsContent>
 
                     <TabsContent value="low">
-                        <InventoryTable items={filteredItems.filter((item) => item.status === 'Low')} />
+                        <InventoryTable items={filteredItems.filter((item) => item.status === 'Low')} onEdit={openModal} />
                     </TabsContent>
 
                     <TabsContent value="critical">
-                        <InventoryTable items={filteredItems.filter((item) => item.status === 'Critical')} />
+                        <InventoryTable items={filteredItems.filter((item) => item.status === 'Critical')} onEdit={openModal} />
                     </TabsContent>
                 </Tabs>
             </div>
@@ -261,7 +261,7 @@ export default function InventoryPage({ inventoryItems, statistics }: Props) {
     );
 }
 
-function InventoryTable({ items }: { items: InventoryItem[] }) {
+function InventoryTable({ items, onEdit }: { items: InventoryItem[]; onEdit: (item: InventoryItem) => void }) {
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-GB', {
             year: 'numeric',
@@ -375,17 +375,9 @@ function InventoryTable({ items }: { items: InventoryItem[] }) {
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex gap-2">
-                                        <Button variant="outline" size="sm" onClick={() => openModal(item)}>
+                                        <Button variant="outline" size="sm" onClick={() => onEdit(item)}>
                                             Edit
                                         </Button>
-                                        <Button variant="outline" size="sm">
-                                            Distribute
-                                        </Button>
-                                        {item.status === 'Critical' && (
-                                            <Button variant="destructive" size="sm">
-                                                Restock
-                                            </Button>
-                                        )}
                                     </div>
                                 </TableCell>
                             </TableRow>

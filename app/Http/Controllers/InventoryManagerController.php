@@ -10,6 +10,7 @@ use App\Models\InventoryAdjustment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class InventoryManagerController extends Controller
