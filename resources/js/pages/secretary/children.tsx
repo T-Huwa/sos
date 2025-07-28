@@ -183,6 +183,19 @@ export default function SecretaryChildren({ children }: Props) {
                                         <p className="text-xs text-muted-foreground">Healthy</p>
                                     </CardContent>
                                 </Card>
+                                <Card>
+                                    <CardContent className="p-4">
+                                        <div className="text-2xl font-bold">
+                                            {
+                                                children.filter(
+                                                    (c) =>
+                                                        c.health_status?.toLowerCase() !== 'good' && c.health_status?.toLowerCase() !== 'excellent',
+                                                ).length
+                                            }
+                                        </div>
+                                        <p className="text-xs text-muted-foreground">Not Healthy</p>
+                                    </CardContent>
+                                </Card>
                             </div>
 
                             {/* Children Table */}
@@ -193,7 +206,6 @@ export default function SecretaryChildren({ children }: Props) {
                                             <TableHead>Name</TableHead>
                                             <TableHead>Age</TableHead>
                                             <TableHead>Gender</TableHead>
-                                            <TableHead>Location</TableHead>
                                             <TableHead>Last Location</TableHead>
                                             <TableHead>School</TableHead>
                                             <TableHead>Health Status</TableHead>
@@ -209,7 +221,6 @@ export default function SecretaryChildren({ children }: Props) {
                                                     </TableCell>
                                                     <TableCell>{child.age || calculateAge(child.date_of_birth)}</TableCell>
                                                     <TableCell className="capitalize">{child.gender || 'Unknown'}</TableCell>
-                                                    <TableCell>{child.location || 'Not specified'}</TableCell>
                                                     <TableCell>{child.last_location || 'Not specified'}</TableCell>
                                                     <TableCell>{child.school || 'Not specified'}</TableCell>
                                                     <TableCell>{getStatusBadge(child.health_status)}</TableCell>

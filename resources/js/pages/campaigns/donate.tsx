@@ -127,13 +127,14 @@ export default function DonateToCampaignPage({ campaign }: Props) {
 
             // Get CSRF token from meta tag
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            console.log(csrfToken)
 
             const response = await fetch(route, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
-                    'X-CSRF-TOKEN': csrfToken || '',
+                    'X-CSRF-TOKEN': csrfToken,
                 },
                 body: JSON.stringify(payload),
             });
@@ -204,13 +205,14 @@ export default function DonateToCampaignPage({ campaign }: Props) {
 
             // Get CSRF token from meta tag
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            console.log(csrfToken)
 
             const response = await fetch(route, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
-                    'X-CSRF-TOKEN': csrfToken || '',
+                    'X-CSRF-TOKEN': csrfToken,
                 },
                 body: JSON.stringify(payload),
             });

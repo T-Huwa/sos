@@ -19,7 +19,7 @@ export default function SecretaryDashboard() {
                             </div>
 
                             {/* Quick Actions */}
-                            <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                            <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2">
                                 <Card>
                                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                         <CardTitle className="text-sm font-medium">View Children</CardTitle>
@@ -52,7 +52,7 @@ export default function SecretaryDashboard() {
                                     </CardContent>
                                 </Card>
 
-                                <Card>
+                                {/* <Card>
                                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                         <CardTitle className="text-sm font-medium">Child Records</CardTitle>
                                         <FileText className="h-4 w-4 text-muted-foreground" />
@@ -64,9 +64,9 @@ export default function SecretaryDashboard() {
                                             Coming Soon
                                         </Button>
                                     </CardContent>
-                                </Card>
+                                </Card> */}
 
-                                <Card>
+                                {/* <Card>
                                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                         <CardTitle className="text-sm font-medium">Reports</CardTitle>
                                         <BarChart3 className="h-4 w-4 text-muted-foreground" />
@@ -78,11 +78,11 @@ export default function SecretaryDashboard() {
                                             Coming Soon
                                         </Button>
                                     </CardContent>
-                                </Card>
+                                </Card> */}
                             </div>
 
                             {/* Recent Activity */}
-                            <Card>
+                            {/* <Card>
                                 <CardHeader>
                                     <CardTitle>Recent Activity</CardTitle>
                                     <CardDescription>Latest updates and activities in the children management system</CardDescription>
@@ -98,7 +98,7 @@ export default function SecretaryDashboard() {
                                         </div>
                                     </div>
                                 </CardContent>
-                            </Card>
+                            </Card> */}
                         </div>
                     </div>
                 </div>
