@@ -135,18 +135,18 @@ const AnonymousDonationForm: React.FC = () => {
 
             // Get CSRF token from meta tag
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            console.log(csrfToken)
+            console.log(csrfToken);
 
             const res = await fetch('/anonymous-donation', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
+                    'X-CSRF-TOKEN': csrfToken || '',
                 },
                 body: JSON.stringify(payload),
             });
 
-            console.log(res);
+            console.log('Response status:', res.status, 'OK:', res.ok);
 
             // Check if response is JSON or text (URL)
             const contentType = res.headers.get('content-type');
@@ -154,10 +154,12 @@ const AnonymousDonationForm: React.FC = () => {
 
             if (contentType && contentType.includes('application/json')) {
                 data = await res.json();
+                console.log('Response data:', data);
             } else {
                 // Response is likely a URL string
                 const url = await res.text();
                 data = { checkout_url: url };
+                console.log('Response URL:', url);
             }
 
             if (!res.ok) {
@@ -203,12 +205,13 @@ const AnonymousDonationForm: React.FC = () => {
                 }, 1500);
             } else if (donationType === 'items' && data.success) {
                 // Handle successful item donation
+                console.log('Item donation successful, showing success message');
                 toast.success(data.message || 'Thank you for your item donation!');
 
                 // Reset form
                 setAmount('');
                 setMessage('');
-                setDonorName('');
+                setDonorName('Anonymous donor');
                 setDonorEmail('');
                 setItems([{ name: '', quantity: 1, description: '' }]);
 
@@ -217,11 +220,12 @@ const AnonymousDonationForm: React.FC = () => {
                     toast.success('We will contact you soon to arrange pickup of your donated items.');
                 }, 2000);
             } else {
+                console.log('Fallback success handler triggered');
                 toast.success('Thank you for your anonymous donation!');
                 // Reset form
                 setAmount('');
                 setMessage('');
-                setDonorName('');
+                setDonorName('Anonymous donor');
                 setDonorEmail('');
                 setItems([{ name: '', quantity: 1, description: '' }]);
             }
